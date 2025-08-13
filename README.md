@@ -1,148 +1,156 @@
-# Gamified E-Waste Challenge Platform
+# E-Waste Challenge Platform
 
-A modern, interactive web application that gamifies e-waste recycling through challenges, quizzes, and rewards. Built with Next.js, TypeScript, Tailwind CSS, and Firebase.
+A gamified platform for promoting e-waste recycling through challenges, quizzes, and community engagement.
 
-## 🌟 Features
+## Features
 
-- **Interactive Dashboard**: Track progress, view statistics, and manage recycling activities
-- **Challenges System**: Join various e-waste recycling missions with different difficulty levels
-- **Knowledge Quizzes**: Test your knowledge about e-waste and earn bonus points
-- **Admin Panel**: Comprehensive management interface for administrators
-- **Responsive Design**: Modern, mobile-friendly interface built with Tailwind CSS
-- **Real-time Updates**: Firebase integration for live data synchronization
+### 🔐 Authentication System
+- **Separate Login Pages**: Different login interfaces for admin and customers
+- **Role-Based Access Control**: Admin and customer roles with appropriate permissions
+- **Protected Routes**: Secure access to admin panel and customer features
 
-## 🚀 Getting Started
+### 👥 User Management
+- **Customer Registration**: Sign up for recycling challenges and quizzes
+- **Admin Panel**: Manage users, challenges, quizzes, and view statistics
+- **User Profiles**: Track progress, points, and achievements
 
-### Prerequisites
+### 🎯 Challenges
+- **Recycling Missions**: Various e-waste recycling challenges
+- **Difficulty Levels**: Easy, medium, and hard challenges
+- **Point System**: Earn points for completing challenges
+- **Categories**: Mobile, computers, batteries, appliances, etc.
 
-- Node.js 18+ 
-- npm or yarn
-- Firebase project setup
+### 🧠 Quizzes
+- **Knowledge Tests**: Educational quizzes about e-waste and recycling
+- **Multiple Categories**: Basics, recycling, environment, technology
+- **Difficulty Levels**: Beginner, intermediate, and advanced
+- **Learning Rewards**: Earn points while learning
 
-### Installation
+### 📊 Admin Panel
+- **Dashboard Overview**: Platform statistics and metrics
+- **User Management**: View, suspend, and manage user accounts
+- **Challenge Management**: Approve, reject, and manage challenges
+- **Quiz Management**: Control quiz availability and settings
+- **Reports & Analytics**: Platform performance insights
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd gamified-ewaste-full
-   ```
+## Setup Instructions
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+### 1. Environment Variables
+Create a `.env.local` file in the root directory:
 
-3. **Environment Setup**
-   Create a `.env.local` file in the root directory with your Firebase configuration:
-   ```env
-   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-   NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🏗️ Project Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── Layout.tsx      # Main layout wrapper
-│   └── Navigation.tsx  # Navigation component
-├── pages/              # Next.js pages
-│   ├── _app.tsx        # App wrapper
-│   ├── index.tsx       # Home page
-│   ├── dashboard/      # User dashboard
-│   ├── challenges/     # Challenges listing
-│   ├── quizzes/        # Knowledge quizzes
-│   └── admin/          # Admin panel
-├── lib/                # Utility libraries
-│   └── firebase.ts     # Firebase configuration
-├── services/           # Service layer
-│   └── firebase.ts     # Firebase services
-└── styles/             # Global styles
-    └── globals.css     # Tailwind CSS imports
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 ```
 
-## 🎯 Available Scripts
+### 2. Firebase Setup
+1. Create a new Firebase project
+2. Enable Authentication (Email/Password)
+3. Enable Firestore Database
+4. Set up security rules for Firestore
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+### 3. Install Dependencies
+```bash
+npm install
+# or
+yarn install
+```
 
-## 🎨 Tech Stack
+### 4. Run Development Server
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS 4
-- **Backend**: Firebase (Firestore, Authentication)
-- **Build Tool**: Next.js built-in bundler
-- **Package Manager**: npm
+## Usage
 
-## 🔧 Configuration
+### For Customers
+1. **Sign Up**: Visit `/login` and create a new account
+2. **Dashboard**: View progress, available challenges, and quizzes
+3. **Challenges**: Browse and participate in recycling challenges
+4. **Quizzes**: Take educational quizzes to earn points
+5. **Progress**: Track your recycling impact and achievements
 
-### Tailwind CSS
-The project uses Tailwind CSS v4 with PostCSS. Configuration files:
-- `tailwind.config.js` - Tailwind configuration
-- `postcss.config.js` - PostCSS plugins
+### For Admins
+1. **Admin Login**: Visit `/admin/login` with admin credentials
+2. **Dashboard**: View platform overview and statistics
+3. **User Management**: Monitor and manage user accounts
+4. **Content Management**: Approve challenges and manage quizzes
+5. **Analytics**: Review platform performance and user engagement
 
-### TypeScript
-TypeScript configuration in `tsconfig.json` includes:
-- Path aliases (`@/*` for `src/*`)
-- Strict type checking
-- Modern ES features
+## Database Structure
 
-## 📱 Pages Overview
+### Collections
 
-1. **Home** (`/`) - Landing page with features and call-to-action
-2. **Dashboard** (`/dashboard`) - User progress tracking and statistics
-3. **Challenges** (`/challenges`) - Browse and join recycling challenges
-4. **Quizzes** (`/quizzes`) - Take knowledge tests and earn points
-5. **Admin** (`/admin`) - Administrative controls and analytics
+#### userRoles
+```typescript
+{
+  uid: string;
+  email: string;
+  role: 'admin' | 'customer';
+  displayName?: string;
+  createdAt: Date;
+  status: 'active' | 'suspended';
+}
+```
 
-## 🚀 Deployment
+#### challenges
+```typescript
+{
+  title: string;
+  description: string;
+  points: number;
+  status: 'active' | 'pending' | 'inactive';
+  creator: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedTime: string;
+  requirements: string[];
+  createdAt: Date;
+}
+```
 
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+#### quizzes
+```typescript
+{
+  title: string;
+  description: string;
+  questions: number;
+  status: 'active' | 'draft' | 'inactive';
+  category: string;
+  points: number;
+  estimatedTime: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  createdAt: Date;
+}
+```
 
-### Other Platforms
-1. Build the project: `npm run build`
-2. Start production server: `npm run start`
-3. Deploy the `.next` folder to your hosting platform
+## Security Features
 
-## 🤝 Contributing
+- **Protected Routes**: Role-based access control
+- **Authentication Required**: All sensitive pages require login
+- **Admin Verification**: Admin panel only accessible to admin users
+- **Data Validation**: Input validation and sanitization
+- **Secure API Calls**: Firebase security rules enforcement
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## 🌱 Environmental Impact
+## Support
 
-This platform encourages responsible e-waste disposal and recycling, contributing to a more sustainable future. Every challenge completed helps reduce electronic waste in landfills and promotes environmental awareness.
-
----
-
-**Built with ❤️ for a greener planet**
+For support and questions, please contact the development team or create an issue in the repository.

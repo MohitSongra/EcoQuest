@@ -1,203 +1,295 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  questions: number;
+  status: 'active' | 'draft' | 'inactive';
+  category: string;
+  points: number;
+  estimatedTime: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+}
 
 export default function Quizzes() {
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const [loading, setLoading] = useState(true);
 
-  // Mock quizzes data - in real app this would come from Firebase
-  const quizzes = [
-    {
-      id: 1,
-      title: 'E-Waste Basics',
-      description: 'Test your knowledge about electronic waste and its environmental impact',
-      questions: 10,
-      timeLimit: '15 min',
-      difficulty: 'Beginner',
-      points: 100,
-      category: 'basics',
-      completed: false,
-      bestScore: null
-    },
-    {
-      id: 2,
-      title: 'Recycling Methods',
-      description: 'Learn about different methods of recycling electronic devices',
-      questions: 15,
-      timeLimit: '20 min',
-      difficulty: 'Intermediate',
-      points: 150,
-      category: 'methods',
-      completed: true,
-      bestScore: 85
-    },
-    {
-      id: 3,
-      title: 'Environmental Impact',
-      description: 'Understand the environmental consequences of improper e-waste disposal',
-      questions: 12,
-      timeLimit: '18 min',
-      difficulty: 'Advanced',
-      points: 200,
-      category: 'environment',
-      completed: false,
-      bestScore: null
-    },
-    {
-      id: 4,
-      title: 'Sustainable Tech',
-      description: 'Explore sustainable technology practices and green alternatives',
-      questions: 8,
-      timeLimit: '12 min',
-      difficulty: 'Beginner',
-      points: 75,
-      category: 'sustainability',
-      completed: true,
-      bestScore: 92
+  const categories = ['all', 'basics', 'recycling', 'environment', 'technology', 'sustainability'];
+  const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
+
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
+
+  useEffect(() => {
+    filterQuizzes();
+  }, [quizzes, selectedCategory, selectedDifficulty]);
+
+  const fetchQuizzes = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch active quizzes
+      const quizzesSnapshot = await getDocs(query(collection(db, 'quizzes'), where('status', '==', 'active')));
+      const quizzesData = quizzesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Quiz[];
+      
+      // Add mock data if no quizzes exist
+      if (quizzesData.length === 0) {
+        quizzesData.push(
+          {
+            id: '1',
+            title: 'E-Waste Basics',
+            description: 'Test your knowledge about electronic waste and its environmental impact.',
+            questions: 10,
+            status: 'active',
+            category: 'basics',
+            points: 50,
+            estimatedTime: '10 minutes',
+            difficulty: 'beginner'
+          },
+          {
+            id: '2',
+            title: 'Recycling Best Practices',
+            description: 'Learn about proper e-waste recycling methods and procedures.',
+            questions: 15,
+            status: 'active',
+            category: 'recycling',
+            points: 75,
+            estimatedTime: '15 minutes',
+            difficulty: 'intermediate'
+          },
+          {
+            id: '3',
+            title: 'Environmental Impact',
+            description: 'Understand the environmental consequences of improper e-waste disposal.',
+            questions: 20,
+            status: 'active',
+            category: 'environment',
+            points: 100,
+            estimatedTime: '20 minutes',
+            difficulty: 'advanced'
+          },
+          {
+            id: '4',
+            title: 'Sustainable Technology',
+            description: 'Explore eco-friendly technology and green computing practices.',
+            questions: 12,
+            status: 'active',
+            category: 'technology',
+            points: 60,
+            estimatedTime: '12 minutes',
+            difficulty: 'intermediate'
+          }
+        );
+      }
+      
+      setQuizzes(quizzesData);
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const categories = [
-    { id: 'all', name: 'All Categories', icon: '📚' },
-    { id: 'basics', name: 'Basics', icon: '🔰' },
-    { id: 'methods', name: 'Methods', icon: '♻' },
-    { id: 'environment', name: 'Environment', icon: '🌍' },
-    { id: 'sustainability', name: 'Sustainability', icon: '🌱' }
-  ];
+  const filterQuizzes = () => {
+    let filtered = quizzes;
 
-  const filteredQuizzes = selectedCategory === 'all' 
-    ? quizzes 
-    : quizzes.filter(quiz => quiz.category === selectedCategory);
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(quiz => quiz.category === selectedCategory);
+    }
+
+    if (selectedDifficulty !== 'all') {
+      filtered = filtered.filter(quiz => quiz.difficulty === selectedDifficulty);
+    }
+
+    setFilteredQuizzes(filtered);
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
+      case 'beginner': return 'bg-green-100 text-green-800';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
+      case 'advanced': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getCategoryIcon = (category: string) => {
-    const cat = categories.find(c => c.id === category);
-    return cat ? cat.icon : '📚';
+    switch (category) {
+      case 'basics': return '📚';
+      case 'recycling': return '♻';
+      case 'environment': return '🌍';
+      case 'technology': return '💻';
+      case 'sustainability': return '🌱';
+      default: return '🧠';
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading quizzes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Knowledge Quizzes</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Test your knowledge about e-waste recycling and earn bonus points. 
-          Challenge yourself with quizzes of varying difficulty levels!
-        </p>
-      </div>
+    <ProtectedRoute requiredRole="customer">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Knowledge Quizzes 🧠</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Test your knowledge about e-waste, recycling, and environmental sustainability. Earn points while learning!
+          </p>
+        </div>
 
-      {/* Category Filters */}
-      <div className="flex flex-wrap justify-center gap-3">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
-              selectedCategory === category.id
-                ? 'bg-green-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <span className="text-lg">{category.icon}</span>
-            <span>{category.name}</span>
-          </button>
-        ))}
-      </div>
+        {/* Filters */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Filter Quizzes</h2>
+          <div className="flex flex-wrap gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {difficulties.map(difficulty => (
+                  <option key={difficulty} value={difficulty}>
+                    {difficulty === 'all' ? 'All Difficulties' : difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
 
-      {/* Quizzes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredQuizzes.map((quiz) => (
-          <div key={quiz.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="text-3xl">{getCategoryIcon(quiz.category)}</div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
+        {/* Quizzes Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredQuizzes.map((quiz) => (
+            <div key={quiz.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl">{getCategoryIcon(quiz.category)}</span>
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(quiz.difficulty)}`}>
                   {quiz.difficulty}
                 </span>
               </div>
               
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{quiz.title}</h3>
-              <p className="text-gray-600 text-sm mb-4">{quiz.description}</p>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">{quiz.title}</h3>
+              <p className="text-gray-600 mb-4">{quiz.description}</p>
               
-              <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                <div>
-                  <p className="text-gray-500">Questions</p>
-                  <p className="font-semibold text-blue-600">{quiz.questions}</p>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Questions:</span>
+                  <span className="font-semibold text-blue-600">{quiz.questions}</span>
                 </div>
-                <div>
-                  <p className="text-gray-500">Time Limit</p>
-                  <p className="font-semibold text-gray-800">{quiz.timeLimit}</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Points:</span>
+                  <span className="font-semibold text-green-600">{quiz.points} pts</span>
                 </div>
-                <div>
-                  <p className="text-gray-500">Points</p>
-                  <p className="font-semibold text-green-600">{quiz.points}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Best Score</p>
-                  <p className="font-semibold text-purple-600">
-                    {quiz.bestScore ? `${quiz.bestScore}%` : 'Not taken'}
-                  </p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Time:</span>
+                  <span className="font-semibold text-purple-600">{quiz.estimatedTime}</span>
                 </div>
               </div>
               
-              {quiz.completed && quiz.bestScore && (
-                <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="text-sm text-green-800">
-                    <span className="font-semibold">Completed!</span> Best score: {quiz.bestScore}%
-                  </p>
-                </div>
-              )}
-              
-              <button className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors ${
-                quiz.completed
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}>
-                {quiz.completed ? 'Completed' : 'Start Quiz'}
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl font-medium transition-colors">
+                Start Quiz
               </button>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* No Results */}
-      {filteredQuizzes.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No quizzes found</h3>
-          <p className="text-gray-600">Try selecting a different category</p>
+          ))}
         </div>
-      )}
 
-      {/* Quiz Stats */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8 text-white">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-          <div>
-            <div className="text-4xl font-bold mb-2">{quizzes.length}</div>
-            <p className="text-blue-100">Total Quizzes</p>
+        {filteredQuizzes.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">No quizzes found</h3>
+            <p className="text-gray-600">Try adjusting your filters or check back later for new quizzes.</p>
           </div>
-          <div>
-            <div className="text-4xl font-bold mb-2">{quizzes.filter(q => q.completed).length}</div>
-            <p className="text-blue-100">Completed</p>
-          </div>
-          <div>
-            <div className="text-4xl font-bold mb-2">{quizzes.reduce((sum, q) => sum + q.points, 0)}</div>
-            <p className="text-blue-100">Total Points</p>
-          </div>
-          <div>
-            <div className="text-4xl font-bold mb-2">
-              {Math.round(quizzes.filter(q => q.completed && q.bestScore).reduce((sum, q) => sum + (q.bestScore || 0), 0) / Math.max(quizzes.filter(q => q.completed).length, 1))}%
+        )}
+
+        {/* Quiz Stats */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Quiz Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">{quizzes.length}</div>
+              <div className="text-gray-600">Total Quizzes</div>
             </div>
-            <p className="text-blue-100">Average Score</p>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                {quizzes.filter(q => q.difficulty === 'beginner').length}
+              </div>
+              <div className="text-gray-600">Beginner</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-yellow-600 mb-2">
+                {quizzes.filter(q => q.difficulty === 'intermediate').length}
+              </div>
+              <div className="text-gray-600">Intermediate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {quizzes.reduce((sum, q) => sum + q.points, 0)}
+              </div>
+              <div className="text-gray-600">Total Points</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Learning Tips */}
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-6 border border-blue-200">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">💡 Learning Tips</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-800">Before Taking a Quiz:</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Read the description carefully</li>
+                <li>• Check the difficulty level</li>
+                <li>• Review related materials</li>
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-800">During the Quiz:</h3>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Take your time to think</li>
+                <li>• Read questions thoroughly</li>
+                <li>• Don't rush through answers</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

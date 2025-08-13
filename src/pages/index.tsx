@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "next/router";
 
 export default function Home() {
 	const [isVisible, setIsVisible] = useState(false);
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+	const { currentUser, userRole } = useAuth();
+	const router = useRouter();
 
 	useEffect(() => {
 		const timer = setTimeout(() => setIsVisible(true), 100);
@@ -18,6 +22,29 @@ export default function Home() {
 			window.removeEventListener("mousemove", handleMouseMove);
 		};
 	}, []);
+
+	// Redirect authenticated users to appropriate dashboard
+	useEffect(() => {
+		if (currentUser) {
+			if (userRole?.role === 'admin') {
+				router.push('/admin');
+			} else {
+				router.push('/dashboard');
+			}
+		}
+	}, [currentUser, userRole, router]);
+
+	// Show loading while checking auth
+	if (currentUser) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+					<p className="mt-4 text-gray-600">Redirecting...</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<main className="min-h-screen">
@@ -77,7 +104,7 @@ export default function Home() {
 
 						{/* CTA Buttons */}
 						<div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-12">
-							<Link href="/dashboard" className="btn btn-primary group w-full sm:w-auto">
+							<Link href="/login" className="btn btn-primary group w-full sm:w-auto">
 								Start your journey
 								<svg
 									className="w-4 h-4 transition-transform group-hover:translate-x-1"
@@ -93,8 +120,8 @@ export default function Home() {
 									/>
 								</svg>
 							</Link>
-							<Link href="/challenges" className="btn btn-outline w-full sm:w-auto">
-								Explore challenges
+							<Link href="/admin/login" className="btn btn-outline w-full sm:w-auto">
+								Admin Access
 							</Link>
 						</div>
 
@@ -177,7 +204,7 @@ export default function Home() {
 									making a real difference.
 								</p>
 								<Link
-									href="/dashboard"
+									href="/login"
 									className="inline-flex items-center text-emerald-600 font-medium hover:text-emerald-700 transition-colors group"
 								>
 									Start earning points
@@ -215,7 +242,7 @@ export default function Home() {
 									goals.
 								</p>
 								<Link
-									href="/dashboard"
+									href="/login"
 									className="inline-flex items-center text-emerald-600 font-medium hover:text-emerald-700 transition-colors group"
 								>
 									View your impact
@@ -253,7 +280,7 @@ export default function Home() {
 									impact.
 								</p>
 								<Link
-									href="/challenges"
+									href="/login"
 									className="inline-flex items-center text-emerald-600 font-medium hover:text-emerald-700 transition-colors group"
 								>
 									Join the community
@@ -291,7 +318,7 @@ export default function Home() {
 									accessible.
 								</p>
 								<Link
-									href="/quizzes"
+									href="/login"
 									className="inline-flex items-center text-emerald-600 font-medium hover:text-emerald-700 transition-colors group"
 								>
 									Start learning
@@ -375,16 +402,16 @@ export default function Home() {
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
 						<Link
-							href="/dashboard"
+							href="/login"
 							className="btn bg-white text-black hover:bg-neutral-100 w-full sm:w-auto"
 						>
 							Get started free
 						</Link>
 						<Link
-							href="/challenges"
+							href="/admin/login"
 							className="btn bg-transparent text-white border-2 border-white hover:bg-white hover:text-black w-full sm:w-auto"
 						>
-							Explore challenges
+							Admin Access
 						</Link>
 					</div>
 

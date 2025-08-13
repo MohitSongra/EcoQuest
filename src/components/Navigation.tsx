@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = () => {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { currentUser, userRole, logout, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,12 +19,21 @@ const Navigation = () => {
 
   const isActive = (path: string) => router.pathname === path;
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/challenges', label: 'Challenges', icon: '🎯' },
-    { href: '/quizzes', label: 'Quizzes', icon: '🧠' },
-    { href: '/admin', label: 'Admin', icon: '⚙️' }
-  ];
+    { href: '/dashboard', label: 'Dashboard', icon: '📊', show: !!currentUser },
+    { href: '/challenges', label: 'Challenges', icon: '🎯', show: !!currentUser },
+    { href: '/quizzes', label: 'Quizzes', icon: '🧠', show: !!currentUser },
+    { href: '/admin', label: 'Admin', icon: '⚙️', show: isAdmin }
+  ].filter(item => item.show);
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -73,6 +84,38 @@ const Navigation = () => {
             ))}
           </div>
 
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-3">
+            {currentUser ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600">
+                  Welcome, {userRole?.displayName || userRole?.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/login"
+                  className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/admin/login"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Admin
+                </Link>
+              </div>
+            )}
+          </div>
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -121,6 +164,43 @@ const Navigation = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
+            
+            {/* Mobile Auth Buttons */}
+            <div className="pt-4 border-t border-gray-200">
+              {currentUser ? (
+                <div className="space-y-2">
+                  <div className="px-4 py-2 text-sm text-gray-600">
+                    Welcome, {userRole?.displayName || userRole?.email}
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block w-full text-left text-gray-700 hover:text-gray-900 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/admin/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block w-full text-left bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    Admin Login
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
