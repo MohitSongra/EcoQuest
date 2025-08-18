@@ -3,6 +3,9 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+import QuizTaker from '../../components/user/QuizTaker';
+import EWasteReporter from '../../components/user/EWasteReporter';
+import ChallengeParticipant from '../../components/user/ChallengeParticipant';
 
 interface Challenge {
   id: string;
@@ -12,15 +15,24 @@ interface Challenge {
   status: 'active' | 'pending' | 'inactive';
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  requirements: string[];
+  estimatedTime: number;
+  creator?: string;
+  createdAt?: Date;
+  imageUrl?: string;
 }
 
 interface Quiz {
   id: string;
   title: string;
-  questions: number;
+  description: string;
+  questions: any[];
   status: 'active' | 'draft' | 'inactive';
   category: string;
   points: number;
+  timeLimit: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  createdAt?: Date;
 }
 
 export default function Dashboard() {
@@ -28,20 +40,28 @@ export default function Dashboard() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Mock user data - in real app this would come from Firestore
-  const userStats = {
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [showEWasteReporter, setShowEWasteReporter] = useState(false);
+  const [userStats, setUserStats] = useState({
     totalPoints: 1250,
     level: 8,
     challengesCompleted: 12,
     quizzesCompleted: 5,
     rank: 'Gold',
     streak: 7
-  };
+  });
+
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (currentUser && userRole) {
+      fetchData();
+    } else if (!currentUser) {
+      // No user, stop loading
+      setLoading(false);
+    }
+    // If currentUser exists but userRole is null, keep loading (role is being fetched)
+  }, [currentUser, userRole]);
 
   const fetchData = async () => {
     try {
@@ -64,12 +84,16 @@ export default function Dashboard() {
       setQuizzes(quizzesData);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Set empty arrays on error to prevent infinite loading
+      setChallenges([]);
+      setQuizzes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  // Show loading only if we're actually loading or if user is authenticated but role is still being fetched
+  if (loading || (currentUser && !userRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -78,6 +102,11 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  // If no user, this will be handled by ProtectedRoute
+  if (!currentUser || !userRole) {
+    return null;
   }
 
   return (
@@ -182,7 +211,10 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-600 mb-3">{challenge.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">{challenge.category}</span>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium">
+                  <button 
+                    onClick={() => setSelectedChallenge(challenge)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium"
+                  >
                     Start Challenge
                   </button>
                 </div>
@@ -207,10 +239,13 @@ export default function Dashboard() {
                   <span className="text-sm font-medium text-gray-500">{quiz.points} pts</span>
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">{quiz.title}</h3>
-                <p className="text-sm text-gray-600 mb-3">{quiz.questions} questions</p>
+                <p className="text-sm text-gray-600 mb-3">{quiz.questions?.length || 0} questions</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">{quiz.category}</span>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium">
+                  <button 
+                    onClick={() => setSelectedQuiz(quiz)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium"
+                  >
                     Take Quiz
                   </button>
                 </div>
@@ -226,7 +261,10 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-medium transition-colors">
+            <button 
+              onClick={() => setShowEWasteReporter(true)}
+              className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-medium transition-colors"
+            >
               📱 Report E-Waste
             </button>
             <button className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-medium transition-colors">
@@ -237,7 +275,52 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Modals */}
+        {selectedQuiz && (
+          <QuizTaker
+            quiz={selectedQuiz}
+            onComplete={(score, points) => {
+              setUserStats(prev => ({
+                ...prev,
+                totalPoints: prev.totalPoints + points,
+                quizzesCompleted: prev.quizzesCompleted + 1
+              }));
+            }}
+            onClose={() => setSelectedQuiz(null)}
+          />
+        )}
+
+        {selectedChallenge && (
+          <ChallengeParticipant
+            challenge={selectedChallenge}
+            onSuccess={() => {
+              // Challenge completion will be handled after admin approval
+            }}
+            onClose={() => setSelectedChallenge(null)}
+          />
+        )}
+
+        {showEWasteReporter && (
+          <EWasteReporter
+            onSuccess={() => {
+              setUserStats(prev => ({
+                ...prev,
+                totalPoints: prev.totalPoints + 50 // Base points for reporting
+              }));
+            }}
+            onClose={() => setShowEWasteReporter(false)}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );
+
+  const handleQuizComplete = (score: number, points: number) => {
+    setUserStats(prev => ({
+      ...prev,
+      totalPoints: prev.totalPoints + points,
+      quizzesCompleted: prev.quizzesCompleted + 1
+    }));
+  };
 }

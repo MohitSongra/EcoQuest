@@ -4,6 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+import QuizManager from '../../components/admin/QuizManager';
+import ChallengeManager from '../../components/admin/ChallengeManager';
+import UserManager from '../../components/admin/UserManager';
+import SampleDataSeeder from '../../components/SampleDataSeeder';
 
 interface Challenge {
   id: string;
@@ -60,7 +64,8 @@ export default function Admin() {
     { id: 'users', name: 'Users', icon: '👥' },
     { id: 'challenges', name: 'Challenges', icon: '🎯' },
     { id: 'quizzes', name: 'Quizzes', icon: '🧠' },
-    { id: 'reports', name: 'Reports', icon: '📈' }
+    { id: 'ewaste', name: 'E-Waste Reports', icon: '♻️' },
+    { id: 'reports', name: 'Analytics', icon: '📈' }
   ];
 
   useEffect(() => {
@@ -213,6 +218,11 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Sample Data Seeder - Only show if no data exists */}
+      {(challenges.length === 0 && quizzes.length === 0) && (
+        <SampleDataSeeder />
+      )}
+
       {/* Pending Challenges */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Pending Challenge Approvals</h2>
@@ -249,150 +259,63 @@ export default function Admin() {
   );
 
   const renderUsers = () => (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">User Management</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold">
-                        {user.displayName?.charAt(0) || user.email.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.displayName || 'No Name'}</div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.points}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {user.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => handleUserStatus(user.id, user.status === 'active' ? 'suspended' : 'active')}
-                    className={`px-3 py-1 rounded text-xs font-medium ${
-                      user.status === 'active' 
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                    }`}
-                  >
-                    {user.status === 'active' ? 'Suspend' : 'Activate'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <UserManager users={users} onUsersUpdate={fetchData} />
   );
 
   const renderChallenges = () => (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Challenge Management</h2>
-      <div className="space-y-4">
-        {challenges.map((challenge) => (
-          <div key={challenge.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-            <div>
-              <h3 className="font-semibold text-gray-800">{challenge.title}</h3>
-              <p className="text-sm text-gray-500">{challenge.description}</p>
-              <p className="text-sm text-gray-500">Points: {challenge.points} | Category: {challenge.category}</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                challenge.status === 'active' ? 'bg-green-100 text-green-800' :
-                challenge.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {challenge.status}
-              </span>
-              <button
-                onClick={() => handleChallengeStatus(challenge.id, challenge.status === 'active' ? 'inactive' : 'active')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
-                  challenge.status === 'active' 
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {challenge.status === 'active' ? 'Deactivate' : 'Activate'}
-              </button>
-            </div>
-          </div>
-        ))}
-        {challenges.length === 0 && (
-          <p className="text-gray-500 text-center py-4">No challenges found</p>
-        )}
-      </div>
-    </div>
+    <ChallengeManager challenges={challenges} onChallengesUpdate={fetchData} />
   );
 
   const renderQuizzes = () => (
+    <QuizManager quizzes={quizzes} onQuizzesUpdate={fetchData} />
+  );
+
+  const renderEWasteReports = () => (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Quiz Management</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">E-Waste Device Reports</h2>
       <div className="space-y-4">
-        {quizzes.map((quiz) => (
-          <div key={quiz.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-            <div>
-              <h3 className="font-semibold text-gray-800">{quiz.title}</h3>
-              <p className="text-sm text-gray-500">Questions: {quiz.questions} | Category: {quiz.category}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-green-50 p-4 rounded-xl">
+            <h3 className="font-semibold text-green-800 mb-2">Total Devices</h3>
+            <p className="text-2xl font-bold text-green-600">1,247</p>
+            <p className="text-sm text-green-600">devices reported</p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-xl">
+            <h3 className="font-semibold text-blue-800 mb-2">This Month</h3>
+            <p className="text-2xl font-bold text-blue-600">89</p>
+            <p className="text-sm text-blue-600">new reports</p>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-xl">
+            <h3 className="font-semibold text-purple-800 mb-2">Categories</h3>
+            <p className="text-2xl font-bold text-purple-600">12</p>
+            <p className="text-sm text-purple-600">device types</p>
+          </div>
+        </div>
+        
+        <div className="bg-gray-50 p-4 rounded-xl">
+          <h4 className="font-medium text-gray-800 mb-3">Recent Reports</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="text-sm">📱 Smartphone - iPhone 12</span>
+              <span className="text-xs text-gray-500">2 hours ago</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                quiz.status === 'active' ? 'bg-green-100 text-green-800' :
-                quiz.status === 'draft' ? 'bg-blue-100 text-blue-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {quiz.status}
-              </span>
-              <button
-                onClick={() => handleQuizStatus(quiz.id, quiz.status === 'active' ? 'inactive' : 'active')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
-                  quiz.status === 'active' 
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {quiz.status === 'active' ? 'Deactivate' : 'Activate'}
-              </button>
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="text-sm">💻 Laptop - Dell XPS 13</span>
+              <span className="text-xs text-gray-500">5 hours ago</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="text-sm">🖥️ Monitor - Samsung 24"</span>
+              <span className="text-xs text-gray-500">1 day ago</span>
             </div>
           </div>
-        ))}
-        {quizzes.length === 0 && (
-          <p className="text-gray-500 text-center py-4">No quizzes found</p>
-        )}
+        </div>
       </div>
     </div>
   );
 
   const renderReports = () => (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Reports & Analytics</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Analytics & Reports</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-blue-50 p-4 rounded-xl">
           <h3 className="font-semibold text-blue-800 mb-2">User Growth</h3>
@@ -424,6 +347,7 @@ export default function Admin() {
       case 'users': return renderUsers();
       case 'challenges': return renderChallenges();
       case 'quizzes': return renderQuizzes();
+      case 'ewaste': return renderEWasteReports();
       case 'reports': return renderReports();
       default: return renderOverview();
     }
