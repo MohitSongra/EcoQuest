@@ -15,18 +15,34 @@ interface Challenge {
   description: string;
   points: number;
   status: 'active' | 'pending' | 'inactive';
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  requirements: string[];
+  estimatedTime: number; // in minutes
   creator: string;
   createdAt: Date;
-  category: string;
+  imageUrl?: string;
+}
+
+interface Question {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
 }
 
 interface Quiz {
   id: string;
   title: string;
-  questions: number;
+  description: string;
+  questions: Question[];
   status: 'active' | 'draft' | 'inactive';
-  createdAt: Date;
   category: string;
+  points: number;
+  timeLimit: number; // in minutes
+  difficulty: 'easy' | 'medium' | 'hard';
+  createdAt: Date;
 }
 
 interface User {

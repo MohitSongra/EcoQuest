@@ -81,23 +81,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function fetchUserRole(uid: string) {
+  async function fetchUserRole(uid: string, email: string) {
     try {
       const userRoleDoc = await getDoc(doc(db, 'userRoles', uid));
       if (userRoleDoc.exists()) {
         const roleData = userRoleDoc.data() as UserRole;
+        // Handle Firestore timestamp conversion
+        if (roleData.createdAt && typeof roleData.createdAt === 'object' && 'toDate' in roleData.createdAt) {
+          roleData.createdAt = (roleData.createdAt as any).toDate();
+        }
         setUserRole(roleData);
+      } else {
+        // Create default customer role for users without roles
+        const defaultUserRole: UserRole = {
+          uid,
+          email,
+          role: 'customer',
+          displayName: email.split('@')[0],
+          createdAt: new Date()
+        };
+        
+        await setDoc(doc(db, 'userRoles', uid), defaultUserRole);
+        setUserRole(defaultUserRole);
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('Error fetching/creating user role:', error);
+      // Set a fallback role to prevent infinite loading
+      setUserRole({
+        uid,
+        email,
+        role: 'customer',
+        displayName: email.split('@')[0],
+        createdAt: new Date()
+      });
     }
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
-      if (user) {
-        await fetchUserRole(user.uid);
+      if (user && user.email) {
+        await fetchUserRole(user.uid, user.email);
       } else {
         setUserRole(null);
       }

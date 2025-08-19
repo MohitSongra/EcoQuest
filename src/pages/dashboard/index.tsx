@@ -3,9 +3,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../services/firebase';
-import QuizTaker from '../../components/user/QuizTaker';
-import EWasteReporter from '../../components/user/EWasteReporter';
-import ChallengeParticipant from '../../components/user/ChallengeParticipant';
+import { QuizTaker, EWasteReporter, ChallengeParticipant } from '../../components/user/components';
 
 interface Challenge {
   id: string;
@@ -215,7 +213,7 @@ export default function Dashboard() {
                     onClick={() => setSelectedChallenge(challenge)}
                     className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium"
                   >
-                    Start Challenge
+                    Participate
                   </button>
                 </div>
               </div>
@@ -278,49 +276,18 @@ export default function Dashboard() {
 
         {/* Modals */}
         {selectedQuiz && (
-          <QuizTaker
-            quiz={selectedQuiz}
-            onComplete={(score, points) => {
-              setUserStats(prev => ({
-                ...prev,
-                totalPoints: prev.totalPoints + points,
-                quizzesCompleted: prev.quizzesCompleted + 1
-              }));
-            }}
-            onClose={() => setSelectedQuiz(null)}
-          />
+          <QuizTaker onClose={() => setSelectedQuiz(null)} />
         )}
 
         {selectedChallenge && (
-          <ChallengeParticipant
-            challenge={selectedChallenge}
-            onSuccess={() => {
-              // Challenge completion will be handled after admin approval
-            }}
-            onClose={() => setSelectedChallenge(null)}
-          />
+          <ChallengeParticipant onClose={() => setSelectedChallenge(null)} />
         )}
 
         {showEWasteReporter && (
-          <EWasteReporter
-            onSuccess={() => {
-              setUserStats(prev => ({
-                ...prev,
-                totalPoints: prev.totalPoints + 50 // Base points for reporting
-              }));
-            }}
-            onClose={() => setShowEWasteReporter(false)}
-          />
+          <EWasteReporter onClose={() => setShowEWasteReporter(false)} />
         )}
       </div>
     </ProtectedRoute>
   );
 
-  const handleQuizComplete = (score: number, points: number) => {
-    setUserStats(prev => ({
-      ...prev,
-      totalPoints: prev.totalPoints + points,
-      quizzesCompleted: prev.quizzesCompleted + 1
-    }));
-  };
 }
