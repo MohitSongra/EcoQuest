@@ -36,15 +36,10 @@ export default function CustomerLogin() {
       
       if (isSignUp) {
         await signUp(email, password, 'customer', displayName);
-        router.push('/dashboard');
       } else {
         await signIn(email, password);
-        if (userRole?.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
       }
+      setLoading(false);
     } catch (error: any) {
       setError(error.message || 'Failed to authenticate');
       setLoading(false);
