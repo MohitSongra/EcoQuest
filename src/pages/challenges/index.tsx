@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { challengesService } from '../../services/firestoreService';
 
 interface Challenge {
   id: string;
@@ -26,70 +25,18 @@ export default function Challenges() {
   const difficulties = ['all', 'easy', 'medium', 'hard'];
 
   useEffect(() => {
-    fetchChallenges();
+    const unsubscribe = challengesService.listenToChallenges((challengesData) => {
+      const activeChallenges = challengesData.filter(challenge => challenge.status === 'active');
+      setChallenges(activeChallenges);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
     filterChallenges();
   }, [challenges, selectedCategory, selectedDifficulty]);
-
-  const fetchChallenges = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch active challenges
-      const challengesSnapshot = await getDocs(query(collection(db, 'challenges'), where('status', '==', 'active')));
-      const challengesData = challengesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Challenge[];
-      
-      // Add mock data if no challenges exist
-      if (challengesData.length === 0) {
-        challengesData.push(
-          {
-            id: '1',
-            title: 'Phone Recycling Mission',
-            description: 'Recycle your old mobile phones and earn points while helping the environment.',
-            points: 150,
-            status: 'active',
-            category: 'mobile',
-            difficulty: 'easy',
-            estimatedTime: '15 minutes',
-            requirements: ['Old mobile phone', 'Recycling center location']
-          },
-          {
-            id: '2',
-            title: 'Battery Collection Drive',
-            description: 'Collect and properly dispose of used batteries from your community.',
-            points: 200,
-            status: 'active',
-            category: 'batteries',
-            difficulty: 'medium',
-            estimatedTime: '1 hour',
-            requirements: ['Collection container', 'Community outreach']
-          },
-          {
-            id: '3',
-            title: 'Laptop Recycling Challenge',
-            description: 'Recycle old laptops and computers to prevent e-waste pollution.',
-            points: 300,
-            status: 'active',
-            category: 'computers',
-            difficulty: 'hard',
-            estimatedTime: '2 hours',
-            requirements: ['Old laptop/computer', 'Data backup', 'Recycling facility']
-          }
-        );
-      }
-      
-      setChallenges(challengesData);
-    } catch (error) {
-      console.error('Error fetching challenges:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterChallenges = () => {
     let filtered = challenges;

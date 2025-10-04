@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { quizzesService } from '../../services/firestoreService';
 
 interface Quiz {
   id: string;
@@ -26,81 +25,18 @@ export default function Quizzes() {
   const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
 
   useEffect(() => {
-    fetchQuizzes();
+    const unsubscribe = quizzesService.listenToQuizzes((quizzesData) => {
+      const activeQuizzes = quizzesData.filter(quiz => quiz.status === 'active');
+      setQuizzes(activeQuizzes);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
     filterQuizzes();
   }, [quizzes, selectedCategory, selectedDifficulty]);
-
-  const fetchQuizzes = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch active quizzes
-      const quizzesSnapshot = await getDocs(query(collection(db, 'quizzes'), where('status', '==', 'active')));
-      const quizzesData = quizzesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Quiz[];
-      
-      // Add mock data if no quizzes exist
-      if (quizzesData.length === 0) {
-        quizzesData.push(
-          {
-            id: '1',
-            title: 'E-Waste Basics',
-            description: 'Test your knowledge about electronic waste and its environmental impact.',
-            questions: 10,
-            status: 'active',
-            category: 'basics',
-            points: 50,
-            estimatedTime: '10 minutes',
-            difficulty: 'beginner'
-          },
-          {
-            id: '2',
-            title: 'Recycling Best Practices',
-            description: 'Learn about proper e-waste recycling methods and procedures.',
-            questions: 15,
-            status: 'active',
-            category: 'recycling',
-            points: 75,
-            estimatedTime: '15 minutes',
-            difficulty: 'intermediate'
-          },
-          {
-            id: '3',
-            title: 'Environmental Impact',
-            description: 'Understand the environmental consequences of improper e-waste disposal.',
-            questions: 20,
-            status: 'active',
-            category: 'environment',
-            points: 100,
-            estimatedTime: '20 minutes',
-            difficulty: 'advanced'
-          },
-          {
-            id: '4',
-            title: 'Sustainable Technology',
-            description: 'Explore eco-friendly technology and green computing practices.',
-            questions: 12,
-            status: 'active',
-            category: 'technology',
-            points: 60,
-            estimatedTime: '12 minutes',
-            difficulty: 'intermediate'
-          }
-        );
-      }
-      
-      setQuizzes(quizzesData);
-    } catch (error) {
-      console.error('Error fetching quizzes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterQuizzes = () => {
     let filtered = quizzes;

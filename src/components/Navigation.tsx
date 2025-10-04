@@ -98,22 +98,16 @@ const Navigation = () => {
                   Logout
                 </button>
               </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/login"
-                  className="text-gray-700 hover:text-gray-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/admin/login"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  Admin
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    href="/login"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Login
+                  </Link>
+                </div>
+              )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -187,16 +181,9 @@ const Navigation = () => {
                   <Link
                     href="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block w-full text-left text-gray-700 hover:text-gray-900 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/admin/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
                     className="block w-full text-left bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-medium transition-colors"
                   >
-                    Admin Login
+                    Login
                   </Link>
                 </div>
               )}

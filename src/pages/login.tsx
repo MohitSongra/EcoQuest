@@ -175,14 +175,6 @@ export default function CustomerLogin() {
             </button>
           </div>
 
-          <div className="text-center">
-            <Link 
-              href="/admin/login" 
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Admin Login →
-            </Link>
-          </div>
         </form>
 
         <div className="mt-6 text-center">

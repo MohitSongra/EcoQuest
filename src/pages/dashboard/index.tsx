@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../services/firebase';
-import { QuizTaker, EWasteReporter, ChallengeParticipant } from '../../components/user/components';
+import { challengesService, quizzesService } from '../../services/firestoreService';
+import { QuizTaker } from '../../components/user/QuizTaker';
+import { EWasteReporter } from '../../components/user/EWasteReporter';
+import { ChallengeParticipant } from '../../components/user/ChallengeParticipant';
 
 interface Challenge {
   id: string;
@@ -53,42 +54,29 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (currentUser && userRole) {
-      fetchData();
+      // Set up real-time listeners for active content
+      const unsubscribeChallenges = challengesService.listenToChallenges((challengesData) => {
+        const activeChallenges = challengesData.filter(c => c.status === 'active');
+        setChallenges(activeChallenges);
+        setLoading(false);
+      });
+
+      const unsubscribeQuizzes = quizzesService.listenToQuizzes((quizzesData) => {
+        const activeQuizzes = quizzesData.filter(q => q.status === 'active');
+        setQuizzes(activeQuizzes);
+      });
+
+      // Cleanup listeners on unmount
+      return () => {
+        unsubscribeChallenges();
+        unsubscribeQuizzes();
+      };
     } else if (!currentUser) {
       // No user, stop loading
       setLoading(false);
     }
     // If currentUser exists but userRole is null, keep loading (role is being fetched)
   }, [currentUser, userRole]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch active challenges
-      const challengesSnapshot = await getDocs(query(collection(db, 'challenges'), where('status', '==', 'active')));
-      const challengesData = challengesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Challenge[];
-      setChallenges(challengesData);
-
-      // Fetch active quizzes
-      const quizzesSnapshot = await getDocs(query(collection(db, 'quizzes'), where('status', '==', 'active')));
-      const quizzesData = quizzesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Quiz[];
-      setQuizzes(quizzesData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      // Set empty arrays on error to prevent infinite loading
-      setChallenges([]);
-      setQuizzes([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Show loading only if we're actually loading or if user is authenticated but role is still being fetched
   if (loading || (currentUser && !userRole)) {

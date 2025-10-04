@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { sampleQuizzes, sampleChallenges } from '../utils/sampleData';
+import { dataSeedingService } from '../services/firestoreService';
 
 export default function SampleDataSeeder() {
   const [isSeeding, setIsSeeding] = useState(false);
@@ -12,24 +10,9 @@ export default function SampleDataSeeder() {
     setSeedStatus('Seeding sample data...');
 
     try {
-      // Seed sample quizzes
-      setSeedStatus('Adding sample quizzes...');
-      for (const quiz of sampleQuizzes) {
-        await addDoc(collection(db, 'quizzes'), {
-          ...quiz,
-          createdAt: new Date()
-        });
-      }
-
-      // Seed sample challenges
-      setSeedStatus('Adding sample challenges...');
-      for (const challenge of sampleChallenges) {
-        await addDoc(collection(db, 'challenges'), {
-          ...challenge,
-          createdAt: new Date()
-        });
-      }
-
+      setSeedStatus('Adding sample quizzes and challenges...');
+      await dataSeedingService.seedSampleData();
+      
       setSeedStatus('Sample data seeded successfully! 🎉');
       setTimeout(() => setSeedStatus(''), 3000);
     } catch (error) {
