@@ -12,14 +12,19 @@ interface Challenge {
   difficulty: 'easy' | 'medium' | 'hard';
   requirements: string[];
   estimatedTime: number;
-  creator: string;
-  createdAt: Date;
+  creator?: string;
+  createdAt?: Date;
   imageUrl?: string;
 }
 
-export function ChallengeParticipant({ onClose }: { onClose: () => void }) {
+interface ChallengeParticipantProps {
+  challenge?: Challenge;
+  onClose: () => void;
+}
+
+export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipantProps) {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(challenge || null);
   const [participationData, setParticipationData] = useState({
     description: '',
     evidence: '',

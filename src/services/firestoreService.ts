@@ -82,10 +82,54 @@ export interface EWasteReport {
   condition: 'working' | 'broken' | 'partially-working';
   location: string;
   reportedBy: string;
+  userId: string;
   reportedAt: Date;
   status: 'pending' | 'collected' | 'processed';
   estimatedValue?: number;
   description?: string;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  type: 'coupon' | 'discount' | 'cashback' | 'voucher';
+  pointsCost: number;
+  value: number; // In rupees or percentage
+  valueType: 'fixed' | 'percentage';
+  stock: number;
+  status: 'active' | 'inactive';
+  expiryDate?: Date;
+  termsAndConditions?: string;
+  imageUrl?: string;
+  createdAt: Date;
+}
+
+export interface RewardRedemption {
+  id: string;
+  rewardId: string;
+  rewardTitle: string;
+  userId: string;
+  userEmail: string;
+  pointsSpent: number;
+  rewardValue: number;
+  couponCode?: string;
+  status: 'pending' | 'approved' | 'used' | 'expired';
+  redeemedAt: Date;
+  usedAt?: Date;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  userId: string;
+  userEmail: string;
+  displayName: string;
+  weeklyPoints: number;
+  devicesReported: number;
+  weekStartDate: Date;
+  weekEndDate: Date;
+  rank: number;
+  prize?: number; // Cash prize in rupees
 }
 
 // Helper function to convert Firestore timestamps
@@ -407,6 +451,208 @@ export const ewasteReportsService = {
     } catch (error) {
       console.error('Error updating report status:', error);
       throw new Error('Failed to update report status');
+    }
+  }
+};
+
+// Rewards Service
+export const rewardsService = {
+  // Get all rewards
+  async getAllRewards(): Promise<Reward[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'rewards'));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: convertTimestamp(doc.data().createdAt),
+        expiryDate: doc.data().expiryDate ? convertTimestamp(doc.data().expiryDate) : undefined
+      })) as Reward[];
+    } catch (error) {
+      console.error('Error fetching rewards:', error);
+      throw new Error('Failed to fetch rewards');
+    }
+  },
+
+  // Listen to rewards changes
+  listenToRewards(callback: (rewards: Reward[]) => void): () => void {
+    const q = query(collection(db, 'rewards'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (querySnapshot) => {
+      const rewards = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: convertTimestamp(doc.data().createdAt),
+        expiryDate: doc.data().expiryDate ? convertTimestamp(doc.data().expiryDate) : undefined
+      })) as Reward[];
+      callback(rewards);
+    });
+  },
+
+  // Create a reward
+  async createReward(rewardData: Omit<Reward, 'id' | 'createdAt'>): Promise<string> {
+    try {
+      const docRef = await addDoc(collection(db, 'rewards'), {
+        ...rewardData,
+        createdAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating reward:', error);
+      throw new Error('Failed to create reward');
+    }
+  },
+
+  // Update a reward
+  async updateReward(rewardId: string, updates: Partial<Reward>): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'rewards', rewardId), updates);
+    } catch (error) {
+      console.error('Error updating reward:', error);
+      throw new Error('Failed to update reward');
+    }
+  },
+
+  // Delete a reward
+  async deleteReward(rewardId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'rewards', rewardId));
+    } catch (error) {
+      console.error('Error deleting reward:', error);
+      throw new Error('Failed to delete reward');
+    }
+  }
+};
+
+// Reward Redemptions Service
+export const rewardRedemptionsService = {
+  // Create a redemption
+  async createRedemption(redemptionData: Omit<RewardRedemption, 'id' | 'redeemedAt'>): Promise<string> {
+    try {
+      const docRef = await addDoc(collection(db, 'rewardRedemptions'), {
+        ...redemptionData,
+        redeemedAt: serverTimestamp()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating redemption:', error);
+      throw new Error('Failed to create redemption');
+    }
+  },
+
+  // Get user redemptions
+  async getUserRedemptions(userId: string): Promise<RewardRedemption[]> {
+    try {
+      const q = query(collection(db, 'rewardRedemptions'), where('userId', '==', userId), orderBy('redeemedAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        redeemedAt: convertTimestamp(doc.data().redeemedAt),
+        usedAt: doc.data().usedAt ? convertTimestamp(doc.data().usedAt) : undefined
+      })) as RewardRedemption[];
+    } catch (error) {
+      console.error('Error fetching user redemptions:', error);
+      throw new Error('Failed to fetch user redemptions');
+    }
+  },
+
+  // Listen to all redemptions (admin)
+  listenToRedemptions(callback: (redemptions: RewardRedemption[]) => void): () => void {
+    const q = query(collection(db, 'rewardRedemptions'), orderBy('redeemedAt', 'desc'));
+    return onSnapshot(q, (querySnapshot) => {
+      const redemptions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        redeemedAt: convertTimestamp(doc.data().redeemedAt),
+        usedAt: doc.data().usedAt ? convertTimestamp(doc.data().usedAt) : undefined
+      })) as RewardRedemption[];
+      callback(redemptions);
+    });
+  },
+
+  // Update redemption status
+  async updateRedemptionStatus(redemptionId: string, status: 'pending' | 'approved' | 'used' | 'expired'): Promise<void> {
+    try {
+      const updates: any = { status };
+      if (status === 'used') {
+        updates.usedAt = serverTimestamp();
+      }
+      await updateDoc(doc(db, 'rewardRedemptions', redemptionId), updates);
+    } catch (error) {
+      console.error('Error updating redemption status:', error);
+      throw new Error('Failed to update redemption status');
+    }
+  }
+};
+
+// Leaderboard Service
+export const leaderboardService = {
+  // Get current week leaderboard
+  async getWeeklyLeaderboard(): Promise<LeaderboardEntry[]> {
+    try {
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+      weekStart.setHours(0, 0, 0, 0);
+
+      const q = query(
+        collection(db, 'leaderboard'),
+        where('weekStartDate', '>=', weekStart),
+        orderBy('weekStartDate', 'desc'),
+        orderBy('rank', 'asc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        weekStartDate: convertTimestamp(doc.data().weekStartDate),
+        weekEndDate: convertTimestamp(doc.data().weekEndDate)
+      })) as LeaderboardEntry[];
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      throw new Error('Failed to fetch leaderboard');
+    }
+  },
+
+  // Listen to leaderboard changes
+  listenToLeaderboard(callback: (entries: LeaderboardEntry[]) => void): () => void {
+    // Simplified query without complex indexes - just get all and sort client-side
+    const q = query(collection(db, 'leaderboard'));
+    
+    return onSnapshot(q, (querySnapshot) => {
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+
+      let entries = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        weekStartDate: convertTimestamp(doc.data().weekStartDate),
+        weekEndDate: convertTimestamp(doc.data().weekEndDate)
+      })) as LeaderboardEntry[];
+
+      // Filter and sort client-side
+      entries = entries
+        .filter(e => e.weekStartDate >= weekStart)
+        .sort((a, b) => {
+          if (a.weekStartDate.getTime() !== b.weekStartDate.getTime()) {
+            return b.weekStartDate.getTime() - a.weekStartDate.getTime();
+          }
+          return a.rank - b.rank;
+        });
+
+      callback(entries);
+    });
+  },
+
+  // Update leaderboard entry
+  async updateLeaderboardEntry(entryId: string, updates: Partial<LeaderboardEntry>): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'leaderboard', entryId), updates);
+    } catch (error) {
+      console.error('Error updating leaderboard entry:', error);
+      throw new Error('Failed to update leaderboard entry');
     }
   }
 };

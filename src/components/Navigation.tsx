@@ -28,38 +28,44 @@ const Navigation = () => {
     }
   };
 
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '📊', show: !!currentUser },
-    { href: '/challenges', label: 'Challenges', icon: '🎯', show: !!currentUser },
-    { href: '/quizzes', label: 'Quizzes', icon: '🧠', show: !!currentUser },
-    { href: '/admin', label: 'Admin', icon: '⚙️', show: isAdmin }
-  ].filter(item => item.show);
+  const navItems = isAdmin 
+    ? [{ href: '/admin', label: 'Admin Panel', icon: '⚙️', show: true }]
+    : [
+        { href: '/dashboard', label: 'Dashboard', icon: '📊', show: !!currentUser },
+        { href: '/rewards', label: 'Rewards', icon: '🎁', show: !!currentUser }
+      ].filter(item => item.show);
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' 
-        : 'bg-white'
+      isAdmin
+        ? 'bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-b border-purple-500/30'
+        : isScrolled 
+          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-emerald-200' 
+          : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-              isScrolled ? 'bg-emerald-600 text-white' : 'bg-black text-white'
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg ${
+              isAdmin 
+                ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
+                : isScrolled 
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-500' 
+                  : 'bg-white/20 backdrop-blur-sm'
             }`}>
-              <span className="text-lg font-bold">♻</span>
+              <span className="text-lg font-bold text-white">♻</span>
             </div>
             <div className="hidden sm:block">
               <span className={`font-bold text-xl transition-colors duration-300 ${
-                isScrolled ? 'text-gray-900' : 'text-gray-900'
+                isAdmin ? 'text-white' : isScrolled ? 'text-gray-900' : 'text-white'
               }`}>
                 EcoQuest
               </span>
               <p className={`text-xs transition-colors duration-300 ${
-                isScrolled ? 'text-gray-600' : 'text-gray-600'
+                isAdmin ? 'text-purple-200' : isScrolled ? 'text-gray-600' : 'text-emerald-50'
               }`}>
-                Transform E-Waste
+                {isAdmin ? 'Admin Control' : 'Transform E-Waste'}
               </p>
             </div>
           </Link>
@@ -70,13 +76,19 @@ const Navigation = () => {
               <Link 
                 key={item.href}
                 href={item.href} 
-                className={`group flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                className={`group flex items-center space-x-2 px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
                   isActive(item.href)
-                    ? 'bg-emerald-600 text-white shadow-lg' 
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    ? isAdmin
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50 transform scale-105'
+                      : 'bg-white text-emerald-600 shadow-lg transform scale-105'
+                    : isAdmin
+                      ? 'text-purple-200 hover:bg-white/10 hover:text-white'
+                      : isScrolled
+                        ? 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-600'
+                        : 'text-white hover:bg-white/20'
                 }`}
               >
-                <span className="text-lg group-hover:scale-110 transition-transform duration-300">
+                <span className="text-xl group-hover:scale-110 transition-transform duration-300">
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
@@ -88,12 +100,18 @@ const Navigation = () => {
           <div className="hidden md:flex items-center space-x-3">
             {currentUser ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600">
+                <span className={`text-sm font-medium ${
+                  isAdmin ? 'text-purple-200' : isScrolled ? 'text-gray-700' : 'text-white'
+                }`}>
                   Welcome, {userRole?.displayName || userRole?.email}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    isAdmin
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white'
+                      : 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white'
+                  }`}
                 >
                   Logout
                 </button>
@@ -102,7 +120,7 @@ const Navigation = () => {
                 <div className="flex items-center space-x-3">
                   <Link
                     href="/login"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
                   >
                     Login
                   </Link>

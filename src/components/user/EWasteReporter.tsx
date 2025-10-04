@@ -30,17 +30,24 @@ export function EWasteReporter({ onClose }: { onClose: () => void }) {
     setSubmitStatus('Submitting report...');
 
     try {
-      await ewasteReportsService.createReport({
+      const reportData: any = {
         deviceType: formData.deviceType,
         brand: formData.brand,
         model: formData.model,
         condition: formData.condition,
         location: formData.location,
         reportedBy: currentUser.uid,
+        userId: currentUser.uid, // Required for Firestore security rules
         status: 'pending',
-        estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
         description: formData.description
-      });
+      };
+
+      // Only include estimatedValue if it has a value
+      if (formData.estimatedValue) {
+        reportData.estimatedValue = parseFloat(formData.estimatedValue);
+      }
+
+      await ewasteReportsService.createReport(reportData);
       
       setSubmitStatus('E-waste device reported successfully! 🎉');
       setTimeout(() => {
