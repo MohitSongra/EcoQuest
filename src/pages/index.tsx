@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/router";
+import LifeCycleScroll from "../components/LifeCycleScroll";
 
 export default function Home() {
 	const [isVisible, setIsVisible] = useState(false);
@@ -150,6 +151,9 @@ export default function Home() {
 					</div>
 				</div>
 			</section>
+
+			{/* LifeCycle Scroll Animation */}
+			<LifeCycleScroll />
 
 			{/* Mission Statement */}
 			<section className="py-12 md:py-20 lg:py-24 bg-neutral-50">

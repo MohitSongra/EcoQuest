@@ -1,0 +1,257 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if user is customer
+    function isCustomer() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.role == 'customer';
+    }
+
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper function to validate email format
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // Helper function to validate points are non-negative
+    function isValidPoints(points) {
+      return points is number && points >= 0;
+    }
+
+    // User Roles Collection
+    match /userRoles/{userId} {
+      // Users can read their own role, admins can read all
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      
+      // Users can create their own role during signup, admins can create any
+      allow create: if isAuthenticated() && 
+                       (isOwner(userId) || isAdmin()) &&
+                       request.resource.data.email is string &&
+                       isValidEmail(request.resource.data.email) &&
+                       request.resource.data.role in ['admin', 'customer'] &&
+                       isValidPoints(request.resource.data.points || 0);
+      
+      // Only admins can update or delete user roles
+      allow update: if isAdmin() &&
+                       request.resource.data.email is string &&
+                       isValidEmail(request.resource.data.email) &&
+                       request.resource.data.role in ['admin', 'customer'] &&
+                       isValidPoints(request.resource.data.points);
+      
+      allow delete: if isAdmin();
+    }
+
+    // Challenges Collection
+    match /challenges/{challengeId} {
+      // Anyone authenticated can read active challenges
+      allow read: if isAuthenticated() && 
+                       (resource.data.status == 'active' || isAdmin());
+      
+      // Only admins can create, update, or delete challenges
+      allow create: if isAdmin() &&
+                       request.resource.data.title is string &&
+                       request.resource.data.title.size() > 0 &&
+                       request.resource.data.description is string &&
+                       request.resource.data.points is number &&
+                       request.resource.data.points > 0 &&
+                       request.resource.data.status in ['active', 'pending', 'inactive'] &&
+                       request.resource.data.category is string &&
+                       request.resource.data.difficulty in ['easy', 'medium', 'hard'];
+      
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Quizzes Collection
+    match /quizzes/{quizId} {
+      // Anyone authenticated can read active quizzes
+      allow read: if isAuthenticated() && 
+                       (resource.data.status == 'active' || isAdmin());
+      
+      // Only admins can create, update, or delete quizzes
+      allow create: if isAdmin() &&
+                       request.resource.data.title is string &&
+                       request.resource.data.title.size() > 0 &&
+                       request.resource.data.description is string &&
+                       request.resource.data.questions is list &&
+                       request.resource.data.questions.size() > 0 &&
+                       request.resource.data.status in ['active', 'draft', 'inactive'] &&
+                       request.resource.data.category is string &&
+                       request.resource.data.points is number &&
+                       request.resource.data.points > 0 &&
+                       request.resource.data.timeLimit is number &&
+                       request.resource.data.timeLimit > 0 &&
+                       request.resource.data.difficulty in ['easy', 'medium', 'hard'];
+      
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Challenge Participations Collection
+    match /challengeParticipations/{participationId} {
+      // Users can read their own participations, admins can read all
+      allow read: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || isAdmin());
+      
+      // Users can create their own participations
+      allow create: if isAuthenticated() &&
+                       isOwner(request.resource.data.userId) &&
+                       request.resource.data.challengeId is string &&
+                       request.resource.data.description is string &&
+                       request.resource.data.location is string &&
+                       request.resource.data.status in ['pending', 'approved', 'rejected'];
+      
+      // Only admins can update or delete participations (for approval/rejection)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // E-Waste Reports Collection
+    match /ewasteReports/{reportId} {
+      // Users can read their own reports, admins can read all
+      allow read: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || isAdmin());
+      
+      // Users can create reports with their own userId
+      allow create: if isAuthenticated() &&
+                       isOwner(request.resource.data.userId) &&
+                       isOwner(request.resource.data.reportedBy) &&
+                       request.resource.data.deviceType is string &&
+                       request.resource.data.brand is string &&
+                       request.resource.data.model is string &&
+                       request.resource.data.condition in ['working', 'broken', 'partially-working'] &&
+                       request.resource.data.location is string &&
+                       request.resource.data.status in ['pending', 'collected', 'processed'];
+      
+      // Only admins can update reports (for status changes)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Quiz Submissions Collection
+    match /quizSubmissions/{submissionId} {
+      // Users can read their own submissions
+      allow read: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || isAdmin());
+      
+      // Users can create their own submissions with score validation
+      allow create: if isAuthenticated() &&
+                       isOwner(request.resource.data.userId) &&
+                       request.resource.data.quizId is string &&
+                       request.resource.data.score is number &&
+                       request.resource.data.score >= 0 &&
+                       request.resource.data.totalQuestions is number &&
+                       request.resource.data.totalQuestions > 0 &&
+                       request.resource.data.correctAnswers is number &&
+                       request.resource.data.correctAnswers >= 0 &&
+                       request.resource.data.correctAnswers <= request.resource.data.totalQuestions;
+      
+      // Only admins can update or delete submissions
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // User Statistics Collection
+    match /userStats/{userId} {
+      // Users can read their own stats
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Admins can read all stats
+      allow read: if isAdmin();
+      
+      // Users can update their own stats (with validation)
+      allow update: if (isOwner(userId) || isAdmin()) &&
+                       isValidPoints(request.resource.data.points || 0) &&
+                       request.resource.data.devicesReported is number &&
+                       request.resource.data.devicesReported >= 0;
+      
+      // Stats are created automatically
+      allow create: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Rewards Collection
+    match /rewards/{rewardId} {
+      // Everyone can read active rewards
+      allow read: if isAuthenticated() && 
+                       (resource.data.status == 'active' || isAdmin());
+      
+      // Only admins can create, update, or delete rewards
+      allow create: if isAdmin() &&
+                       request.resource.data.title is string &&
+                       request.resource.data.title.size() > 0 &&
+                       request.resource.data.description is string &&
+                       request.resource.data.type in ['coupon', 'discount', 'cashback', 'voucher'] &&
+                       request.resource.data.pointsCost is number &&
+                       request.resource.data.pointsCost > 0 &&
+                       request.resource.data.value is number &&
+                       request.resource.data.value > 0 &&
+                       request.resource.data.valueType in ['fixed', 'percentage'] &&
+                       request.resource.data.stock is number &&
+                       request.resource.data.stock >= 0 &&
+                       request.resource.data.status in ['active', 'inactive'];
+      
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Reward Redemptions Collection
+    match /rewardRedemptions/{redemptionId} {
+      // Users can read their own redemptions
+      allow read: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || isAdmin());
+      
+      // Users can create their own redemptions
+      allow create: if isAuthenticated() &&
+                       isOwner(request.resource.data.userId) &&
+                       request.resource.data.rewardId is string &&
+                       request.resource.data.pointsSpent is number &&
+                       request.resource.data.pointsSpent > 0 &&
+                       request.resource.data.rewardValue is number &&
+                       request.resource.data.rewardValue > 0 &&
+                       request.resource.data.status in ['pending', 'approved', 'used', 'expired'];
+      
+      // Only admins can update redemptions (for status changes)
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Leaderboard Collection
+    match /leaderboard/{entryId} {
+      // Everyone can read the leaderboard
+      allow read: if isAuthenticated();
+      
+      // Only admins can write to leaderboard
+      allow write: if isAdmin() &&
+                     request.resource.data.userId is string &&
+                     request.resource.data.userEmail is string &&
+                     isValidEmail(request.resource.data.userEmail) &&
+                     request.resource.data.displayName is string &&
+                     isValidPoints(request.resource.data.weeklyPoints) &&
+                     request.resource.data.devicesReported is number &&
+                     request.resource.data.devicesReported >= 0 &&
+                     request.resource.data.rank is number &&
+                     request.resource.data.rank > 0;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

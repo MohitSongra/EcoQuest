@@ -13,124 +13,22 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ValidationService } from './validationService';
+import {
+  Challenge,
+  Quiz,
+  User,
+  ChallengeParticipation,
+  EWasteReport,
+  Reward,
+  RewardRedemption,
+  LeaderboardEntry,
+  QuizSubmission,
+  CreateChallengeData,
+  CreateQuizData,
+  CreateRewardData
+} from '../types';
 
-// Types
-export interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  status: 'active' | 'pending' | 'inactive';
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  requirements: string[];
-  estimatedTime: number;
-  creator: string;
-  createdAt: Date;
-  imageUrl?: string;
-}
-
-export interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-}
-
-export interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  questions: Question[];
-  status: 'active' | 'draft' | 'inactive';
-  category: string;
-  points: number;
-  timeLimit: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt: Date;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  displayName?: string;
-  role: 'admin' | 'customer';
-  points: number;
-  status: 'active' | 'suspended';
-  createdAt: Date;
-}
-
-export interface ChallengeParticipation {
-  id: string;
-  challengeId: string;
-  userId: string;
-  userEmail: string;
-  description: string;
-  evidence: string;
-  location: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: Date;
-  points: number;
-}
-
-export interface EWasteReport {
-  id: string;
-  deviceType: string;
-  brand: string;
-  model: string;
-  condition: 'working' | 'broken' | 'partially-working';
-  location: string;
-  reportedBy: string;
-  userId: string;
-  reportedAt: Date;
-  status: 'pending' | 'collected' | 'processed';
-  estimatedValue?: number;
-  description?: string;
-}
-
-export interface Reward {
-  id: string;
-  title: string;
-  description: string;
-  type: 'coupon' | 'discount' | 'cashback' | 'voucher';
-  pointsCost: number;
-  value: number; // In rupees or percentage
-  valueType: 'fixed' | 'percentage';
-  stock: number;
-  status: 'active' | 'inactive';
-  expiryDate?: Date;
-  termsAndConditions?: string;
-  imageUrl?: string;
-  createdAt: Date;
-}
-
-export interface RewardRedemption {
-  id: string;
-  rewardId: string;
-  rewardTitle: string;
-  userId: string;
-  userEmail: string;
-  pointsSpent: number;
-  rewardValue: number;
-  couponCode?: string;
-  status: 'pending' | 'approved' | 'used' | 'expired';
-  redeemedAt: Date;
-  usedAt?: Date;
-}
-
-export interface LeaderboardEntry {
-  id: string;
-  userId: string;
-  userEmail: string;
-  displayName: string;
-  weeklyPoints: number;
-  devicesReported: number;
-  weekStartDate: Date;
-  weekEndDate: Date;
-  rank: number;
-  prize?: number; // Cash prize in rupees
-}
 
 // Helper function to convert Firestore timestamps
 const convertTimestamp = (timestamp: any): Date => {
@@ -187,8 +85,20 @@ export const challengesService = {
   },
 
   // Create a new challenge
-  async createChallenge(challengeData: Omit<Challenge, 'id' | 'createdAt'>): Promise<string> {
+  async createChallenge(challengeData: CreateChallengeData): Promise<string> {
     try {
+      // Validate challenge data
+      const fullChallenge: Challenge = {
+        ...challengeData,
+        id: '', // Will be set by Firestore
+        createdAt: new Date()
+      };
+      
+      const validation = ValidationService.validateChallenge(fullChallenge);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      }
+
       const docRef = await addDoc(collection(db, 'challenges'), {
         ...challengeData,
         createdAt: serverTimestamp()
@@ -268,8 +178,20 @@ export const quizzesService = {
   },
 
   // Create a new quiz
-  async createQuiz(quizData: Omit<Quiz, 'id' | 'createdAt'>): Promise<string> {
+  async createQuiz(quizData: CreateQuizData): Promise<string> {
     try {
+      // Validate quiz data
+      const fullQuiz: Quiz = {
+        ...quizData,
+        id: '', // Will be set by Firestore
+        createdAt: new Date()
+      };
+      
+      const validation = ValidationService.validateQuiz(fullQuiz);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      }
+
       const docRef = await addDoc(collection(db, 'quizzes'), {
         ...quizData,
         createdAt: serverTimestamp()
@@ -488,8 +410,20 @@ export const rewardsService = {
   },
 
   // Create a reward
-  async createReward(rewardData: Omit<Reward, 'id' | 'createdAt'>): Promise<string> {
+  async createReward(rewardData: CreateRewardData): Promise<string> {
     try {
+      // Validate reward data
+      const fullReward: Reward = {
+        ...rewardData,
+        id: '', // Will be set by Firestore
+        createdAt: new Date()
+      };
+      
+      const validation = ValidationService.validateReward(fullReward);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      }
+
       const docRef = await addDoc(collection(db, 'rewards'), {
         ...rewardData,
         createdAt: serverTimestamp()
@@ -616,31 +550,27 @@ export const leaderboardService = {
 
   // Listen to leaderboard changes
   listenToLeaderboard(callback: (entries: LeaderboardEntry[]) => void): () => void {
-    // Simplified query without complex indexes - just get all and sort client-side
-    const q = query(collection(db, 'leaderboard'));
+    // Get current week start date for filtering
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    // Use compound query for better performance
+    const q = query(
+      collection(db, 'leaderboard'),
+      where('weekStartDate', '>=', weekStart),
+      orderBy('weekStartDate', 'desc'),
+      orderBy('rank', 'asc')
+    );
     
     return onSnapshot(q, (querySnapshot) => {
-      const now = new Date();
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay());
-      weekStart.setHours(0, 0, 0, 0);
-
-      let entries = querySnapshot.docs.map(doc => ({
+      const entries = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         weekStartDate: convertTimestamp(doc.data().weekStartDate),
         weekEndDate: convertTimestamp(doc.data().weekEndDate)
       })) as LeaderboardEntry[];
-
-      // Filter and sort client-side
-      entries = entries
-        .filter(e => e.weekStartDate >= weekStart)
-        .sort((a, b) => {
-          if (a.weekStartDate.getTime() !== b.weekStartDate.getTime()) {
-            return b.weekStartDate.getTime() - a.weekStartDate.getTime();
-          }
-          return a.rank - b.rank;
-        });
 
       callback(entries);
     });

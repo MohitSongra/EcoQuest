@@ -8,14 +8,9 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { UserRole } from '../types';
+import { ValidationService } from '../services/validationService';
 
-interface UserRole {
-  uid: string;
-  email: string;
-  role: 'admin' | 'customer';
-  displayName?: string;
-  createdAt: Date;
-}
 
 interface AuthContextType {
   currentUser: User | null;
@@ -90,7 +85,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (roleData.createdAt && typeof roleData.createdAt === 'object' && 'toDate' in roleData.createdAt) {
           roleData.createdAt = (roleData.createdAt as any).toDate();
         }
-        setUserRole(roleData);
+        
+        // Validate user role data
+        const validation = ValidationService.validateUser({
+          id: uid,
+          email: roleData.email,
+          displayName: roleData.displayName,
+          role: roleData.role,
+          points: 0, // Not stored in UserRole
+          status: 'active', // Not stored in UserRole
+          createdAt: roleData.createdAt
+        });
+        
+        if (validation.isValid) {
+          setUserRole(roleData);
+        } else {
+          console.error('Invalid user role data:', validation.errors);
+          // Set fallback role
+          setUserRole({
+            uid,
+            email,
+            role: 'customer',
+            displayName: email.split('@')[0],
+            createdAt: new Date()
+          });
+        }
       } else {
         // Create default customer role for users without roles
         const defaultUserRole: UserRole = {
@@ -118,17 +137,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    let isMounted = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+      
       setCurrentUser(user);
+      
       if (user && user.email) {
-        await fetchUserRole(user.uid, user.email);
+        try {
+          await fetchUserRole(user.uid, user.email);
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          if (isMounted) {
+            setUserRole(null);
+          }
+        }
       } else {
-        setUserRole(null);
+        if (isMounted) {
+          setUserRole(null);
+        }
       }
-      setLoading(false);
+      
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const value: AuthContextType = {

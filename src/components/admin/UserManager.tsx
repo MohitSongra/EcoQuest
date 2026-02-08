@@ -2,16 +2,9 @@ import React, { useState } from 'react';
 import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, auth } from '../../services/firebase';
-
-interface User {
-  id: string;
-  email: string;
-  displayName?: string;
-  role: 'admin' | 'customer';
-  points: number;
-  status: 'active' | 'suspended';
-  createdAt: Date;
-}
+import { User, CreateUserData } from '../../types';
+import { ValidationService } from '../../services/validationService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface UserManagerProps {
   users: User[];
@@ -19,15 +12,27 @@ interface UserManagerProps {
 }
 
 export default function UserManager({ users, onUsersUpdate }: UserManagerProps) {
+  const { isAdmin } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateUserData>({
     email: '',
     displayName: '',
-    role: 'customer' as 'admin' | 'customer',
+    role: 'customer',
     password: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+        <h3 className="text-xl font-bold text-red-800 mb-2">Access Denied</h3>
+        <p className="text-red-600">You don't have permission to manage users.</p>
+      </div>
+    );
+  }
 
   const resetForm = () => {
     setFormData({
@@ -42,29 +47,52 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Validate form data
+    if (!ValidationService.isValidEmail(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       
-      // Create user role document
+      // Create user role document with consistent structure
       const userRoleData = {
         uid: userCredential.user.uid,
         email: formData.email,
-        displayName: formData.displayName,
+        displayName: formData.displayName || formData.email.split('@')[0],
         role: formData.role,
         points: 0,
-        status: 'active',
+        status: 'active' as const,
         createdAt: new Date()
       };
+
+      // Validate user data before saving
+      const validation = ValidationService.validateUser(userRoleData);
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.map(e => e.message).join(', ')}`);
+      }
 
       await addDoc(collection(db, 'userRoles'), userRoleData);
       onUsersUpdate();
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
-      alert('Error creating user. Please try again.');
+      if (error.code === 'auth/email-already-in-use') {
+        setError('A user with this email already exists');
+      } else {
+        setError('Error creating user. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -74,18 +102,20 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
     e.preventDefault();
     if (!editingUser) return;
     
+    setError('');
     setIsSubmitting(true);
     try {
       const updateData = {
         displayName: formData.displayName,
         role: formData.role
       };
+      
       await updateDoc(doc(db, 'userRoles', editingUser.id), updateData);
       onUsersUpdate();
       resetForm();
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user. Please try again.');
+      setError('Error updating user. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -99,8 +129,20 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
       onUsersUpdate();
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user. Please try again.');
+      setError('Error deleting user. Please try again.');
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      displayName: '',
+      role: 'customer',
+      password: ''
+    });
+    setEditingUser(null);
+    setShowCreateForm(false);
+    setError('');
   };
 
   const handleStatusChange = async (userId: string, status: 'active' | 'suspended') => {
@@ -197,6 +239,12 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
                 </div>
               )}
             </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-4 mt-6">
               <button

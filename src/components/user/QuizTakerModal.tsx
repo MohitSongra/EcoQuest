@@ -1,26 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-}
-
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  questions: Question[];
-  status: 'active' | 'draft' | 'inactive';
-  category: string;
-  points: number;
-  timeLimit: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt?: Date;
-}
+import { Quiz, Question, QuizSubmission } from '../../types';
+import { ValidationService } from '../../services/validationService';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 interface QuizTakerProps {
   quiz: Quiz;
@@ -58,14 +41,50 @@ export function QuizTaker({ quiz, onClose }: QuizTakerProps) {
     }
   };
 
-  const calculateScore = () => {
+  const calculateScore = async () => {
     let correctAnswers = 0;
     quiz.questions.forEach((question, index) => {
       if (selectedAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
+    
+    // Calculate score based on correct answers
     const finalScore = Math.round((correctAnswers / quiz.questions.length) * quiz.points);
+    
+    // Create quiz submission for server-side validation
+    if (currentUser && currentUser.email) {
+      try {
+        const submission: QuizSubmission = {
+          id: '', // Will be set by Firestore
+          quizId: quiz.id,
+          userId: currentUser.uid,
+          userEmail: currentUser.email,
+          score: finalScore,
+          totalQuestions: quiz.questions.length,
+          correctAnswers,
+          submittedAt: new Date()
+        };
+        
+        // Validate submission
+        const validation = ValidationService.validateQuizSubmission(submission, quiz);
+        if (!validation.isValid) {
+          console.error('Quiz submission validation failed:', validation.errors);
+          // Still show results to user but log the error
+        }
+        
+        // Save submission to Firestore
+        await setDoc(doc(db, 'quizSubmissions', `${currentUser.uid}_${quiz.id}_${Date.now()}`), {
+          ...submission,
+          submittedAt: serverTimestamp()
+        });
+        
+      } catch (error) {
+        console.error('Error saving quiz submission:', error);
+        // Continue with showing results even if saving fails
+      }
+    }
+    
     setScore(finalScore);
     setShowResults(true);
   };

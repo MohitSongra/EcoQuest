@@ -33,6 +33,28 @@ A gamified platform for promoting e-waste recycling through challenges, quizzes,
 - **Quiz Management**: Control quiz availability and settings
 - **Reports & Analytics**: Platform performance insights
 
+## 🔒 Security Features
+
+### Database Security
+- **Firestore Security Rules**: Comprehensive access controls at database level
+- **Role-Based Authorization**: Admin and customer role enforcement
+- **Data Validation**: Server-side validation for all operations
+- **Ownership Verification**: Users can only access their own data
+
+### Application Security
+- **Input Validation**: Client and server-side validation using ValidationService
+- **Authentication Protection**: Secure auth flow with race condition prevention
+- **Admin Access Control**: All admin tools protected with authorization checks
+- **Audit Logging**: Tracking of sensitive operations
+
+### Security Best Practices
+- **Principle of Least Privilege**: Minimal permissions for each role
+- **Defense in Depth**: Multiple layers of security validation
+- **Error Handling**: Secure error messages without information leakage
+- **Regular Security Reviews**: Ongoing security monitoring and updates
+
+📖 **Detailed security guidelines available in [SECURITY.md](./SECURITY.md)**
+
 ## Setup Instructions
 
 ### 1. Environment Variables
