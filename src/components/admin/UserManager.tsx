@@ -68,6 +68,7 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
       
       // Create user role document with consistent structure
       const userRoleData = {
+        id: userCredential.user.uid, // Add the missing id field
         uid: userCredential.user.uid,
         email: formData.email,
         displayName: formData.displayName || formData.email.split('@')[0],
@@ -131,18 +132,6 @@ export default function UserManager({ users, onUsersUpdate }: UserManagerProps) 
       console.error('Error deleting user:', error);
       setError('Error deleting user. Please try again.');
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      email: '',
-      displayName: '',
-      role: 'customer',
-      password: ''
-    });
-    setEditingUser(null);
-    setShowCreateForm(false);
-    setError('');
   };
 
   const handleStatusChange = async (userId: string, status: 'active' | 'suspended') => {

@@ -7,34 +7,7 @@ import { EWasteReporter } from '../../components/user/EWasteReporter';
 import { ChallengeParticipant } from '../../components/user/ChallengeParticipant';
 import Leaderboard from '../../components/user/Leaderboard';
 import MyReports from '../../components/user/MyReports';
-
-interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  status: 'active' | 'pending' | 'inactive';
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  requirements: string[];
-  estimatedTime: number;
-  creator?: string;
-  createdAt?: Date;
-  imageUrl?: string;
-}
-
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  questions: any[];
-  status: 'active' | 'draft' | 'inactive';
-  category: string;
-  points: number;
-  timeLimit: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt?: Date;
-}
+import { Quiz, Challenge } from '../../types';
 
 export default function Dashboard() {
   const { currentUser, userRole } = useAuth();

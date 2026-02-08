@@ -29,6 +29,22 @@ import {
   CreateRewardData
 } from '../types';
 
+// Re-export types for convenience
+export type {
+  Challenge,
+  Quiz,
+  User,
+  ChallengeParticipation,
+  EWasteReport,
+  Reward,
+  RewardRedemption,
+  LeaderboardEntry,
+  QuizSubmission,
+  CreateChallengeData,
+  CreateQuizData,
+  CreateRewardData
+};
+
 
 // Helper function to convert Firestore timestamps
 const convertTimestamp = (timestamp: any): Date => {

@@ -22,7 +22,7 @@ export default function LifeCycleScroll() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const animationFrameRef = useRef<number | undefined>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
   const currentFrameRef = useRef<number>(0);
 
   const { scrollYProgress } = useScroll({
