@@ -13,7 +13,7 @@
   "dependencies": {
     "firebase": "^12.3.0",
     "framer-motion": "^12.33.0",
-    "next": "latest",
+    "next": "15.5.8",
     "react": "latest",
     "react-dom": "latest",
     "selenium-webdriver": "^4.41.0"
