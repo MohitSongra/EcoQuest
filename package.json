@@ -7,14 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node tests/seleniumTest.js"
   },
   "dependencies": {
     "firebase": "^12.3.0",
     "framer-motion": "^12.33.0",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "selenium-webdriver": "^4.41.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",

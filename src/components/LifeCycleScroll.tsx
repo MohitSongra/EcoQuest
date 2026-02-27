@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, MotionValue, AnimatePresence } from 'framer-motion';
 
 interface TextOverlay {
   start: number;
@@ -67,23 +67,17 @@ export default function LifeCycleScroll() {
   // Set canvas size on mount and resize
   useEffect(() => {
     const updateCanvasSize = () => {
-      if (canvasRef.current) {
+      if (canvasRef.current && images.length > 0) {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        if (ctx && images.length > 0) {
+        if (ctx) {
           // Use first image to determine aspect ratio
           const firstImage = images[0];
           const aspectRatio = firstImage.width / firstImage.height;
           
-          // Set canvas to full viewport height
+          // Set canvas to full viewport size
+          canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
-          canvas.width = window.innerHeight * aspectRatio;
-          
-          // Center canvas if wider than viewport
-          if (canvas.width > window.innerWidth) {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerWidth / aspectRatio;
-          }
           
           setCanvasSize({ width: canvas.width, height: canvas.height });
         }
@@ -109,12 +103,19 @@ export default function LifeCycleScroll() {
       const frame = Math.max(0, Math.min(Math.floor(frameIndex.get()), 132));
       currentFrameRef.current = frame;
       
-      // Draw current frame centered
+      // Draw current frame centered and scaled
       const img = images[frame];
       if (img) {
-        const x = (canvas.width - canvas.width) / 2;
-        const y = (canvas.height - canvas.height) / 2;
-        ctx.drawImage(img, x, y, canvas.width, canvas.height);
+        // Calculate scaled dimensions to fit canvas
+        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        
+        // Calculate centered position
+        const x = (canvas.width - scaledWidth) / 2;
+        const y = (canvas.height - scaledHeight) / 2;
+        
+        ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
       }
     }
     
@@ -138,17 +139,17 @@ export default function LifeCycleScroll() {
     <>
       {/* Loading Screen */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-green-400 text-lg font-light tracking-wide">Loading Resources...</p>
-            <p className="text-green-400/60 text-sm mt-2">{Math.round(loadingProgress)}%</p>
+        <div className="fixed inset-0 bg-primary z-50 flex items-center justify-center">
+          <div className="text-center relative z-10">
+            <div className="w-16 h-16 border-2 border-neon-green border-t-transparent rounded-full animate-spin mx-auto mb-4 shadow-neon-green"></div>
+            <p className="text-neon-green text-lg font-light tracking-wide font-clash animate-neon-flicker">Loading Resources...</p>
+            <p className="text-neon-cyan/60 text-sm mt-2 font-satoshi">{Math.round(loadingProgress)}%</p>
           </div>
         </div>
       )}
 
       {/* Main Scroll Container */}
-      <div ref={containerRef} className="relative bg-black">
+      <div ref={containerRef} className="relative bg-primary">
         {/* 500vh scroll container */}
         <div className="h-[500vh] relative">
           {/* Sticky Canvas */}
@@ -174,18 +175,27 @@ export default function LifeCycleScroll() {
             >
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                animate={{ 
+                  opacity: scrollYProgress.get() >= overlay.start && scrollYProgress.get() <= overlay.end ? 1 : 0,
+                  y: scrollYProgress.get() >= overlay.start && scrollYProgress.get() <= overlay.end ? 0 : 20
+                }}
                 transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
                 className="text-center px-6 max-w-4xl mx-auto"
               >
-                <h2 className="text-4xl md:text-6xl lg:text-7xl font-light text-white tracking-tight mb-8">
+                <h2 className="text-4xl md:text-6xl lg:text-7xl font-light text-white tracking-tight mb-8 font-clash">
                   {overlay.text.split(' ').map((word, wordIndex) => (
-                    <span
+                    <motion.span
                       key={wordIndex}
-                      className={wordIndex === overlay.text.split(' ').length - 1 ? 'text-green-400 drop-shadow-[0_0_20px_rgba(74,222,128,0.5)]' : ''}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ 
+                        opacity: scrollYProgress.get() >= overlay.start && scrollYProgress.get() <= overlay.end ? 1 : 0,
+                        y: scrollYProgress.get() >= overlay.start && scrollYProgress.get() <= overlay.end ? 0 : 20
+                      }}
+                      transition={{ delay: wordIndex * 0.1, duration: 0.6 }}
+                      className={wordIndex === overlay.text.split(' ').length - 1 ? 'text-neon-green font-bold' : ''}
                     >
                       {word}{' '}
-                    </span>
+                    </motion.span>
                   ))}
                 </h2>
                 
@@ -198,7 +208,7 @@ export default function LifeCycleScroll() {
                   >
                     <a
                       href="/login"
-                      className="inline-flex items-center px-8 py-4 bg-green-400 text-black font-medium rounded-full hover:bg-green-300 transition-all duration-300 hover:scale-105 tracking-wide"
+                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-neon-green to-neon-cyan text-primary font-semibold rounded-full hover:from-neon-cyan hover:to-neon-green transition-all duration-300 hover:scale-105 tracking-wide font-satoshi shadow-neon-green hover:shadow-neon-cyan"
                     >
                       Join Now
                       <svg

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
 import { challengesService, quizzesService } from '../../services/firestoreService';
@@ -71,10 +72,13 @@ export default function Dashboard() {
   // Show loading only if we're actually loading or if user is authenticated but role is still being fetched
   if (loading || (currentUser && !userRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-neon-green/30 border-t-neon-green rounded-full animate-spin shadow-neon-green"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin shadow-neon-cyan" style={{ animationDelay: '0.2s', animationDirection: 'reverse' }}></div>
+          </div>
+          <p className="mt-6 text-neutral-400 font-satoshi animate-pulse">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -87,142 +91,252 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute requiredRole="customer">
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+      <div className="min-h-screen bg-primary particle-bg">
         <div className="space-y-8 p-6">
           {/* Header */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl shadow-2xl p-8">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIzIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative overflow-hidden glass-neon rounded-3xl shadow-neon-green p-8"
+          >
+            <div className="absolute inset-0 gradient-mesh opacity-20"></div>
             <div className="relative z-10 text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 shadow-lg">
-                <span className="text-5xl">♻️</span>
-              </div>
-              <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="inline-flex items-center justify-center w-20 h-20 glass-neon rounded-full mb-4 shadow-neon-cyan"
+              >
+                <span className="text-5xl animate-pulse">♻️</span>
+              </motion.div>
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="font-clash text-4xl md:text-5xl font-bold text-gradient mb-3 tracking-tight"
+              >
                 Welcome back, {userRole?.displayName || 'Champion'}!
-              </h1>
-              <p className="text-emerald-50 text-lg max-w-2xl mx-auto">
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+                className="text-neutral-400 text-lg max-w-2xl mx-auto font-satoshi"
+              >
                 Continue your e-waste recycling journey. Complete challenges, take quizzes, and earn points to climb the leaderboard!
-              </p>
+              </motion.p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Stats Grid */}
-          <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8 text-white">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="glass-neon rounded-3xl shadow-neon-purple p-8"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium mb-2">Your Total Points</p>
-                <p className="text-6xl font-bold">{userPoints}</p>
-                <p className="text-blue-100 text-sm mt-2">
+                <p className="text-neutral-400 text-sm font-medium mb-2 font-satoshi">Your Total Points</p>
+                <motion.p 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1, duration: 0.8, type: "spring" }}
+                  className="font-clash text-6xl md:text-7xl font-bold text-gradient"
+                >
+                  {userPoints}
+                </motion.p>
+                <p className="text-neutral-500 text-sm mt-2 font-satoshi">
                   Earn points by completing challenges, quizzes, and reporting e-waste!
                 </p>
               </div>
-              <div className="text-8xl opacity-80">💎</div>
+              <motion.div 
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="text-8xl opacity-80"
+              >
+                💎
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           {/* My E-Waste Reports */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100 p-8">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.2, duration: 0.6 }}
+            className="glass-neon rounded-3xl shadow-neon-cyan p-8"
+          >
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 flex items-center">
-                <span className="text-3xl mr-3">📱</span>
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3, duration: 0.6 }}
+                className="font-clash text-3xl font-bold text-neutral-300 flex items-center"
+              >
+                <motion.span 
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="text-3xl mr-3"
+                >
+                  📱
+                </motion.span>
                 My E-Waste Reports
-              </h2>
-              <button 
+              </motion.h2>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setShowEWasteReporter(true)}
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="btn btn-primary font-satoshi"
               >
                 + Report E-Waste
-              </button>
+              </motion.button>
             </div>
             <MyReports />
-          </div>
+          </motion.div>
 
           {/* Available Challenges */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-emerald-100 p-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center">
-              <span className="text-3xl mr-3">🎯</span>
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.4, duration: 0.6 }}
+            className="glass-neon rounded-3xl shadow-neon-green p-8"
+          >
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.6 }}
+              className="font-clash text-3xl font-bold text-neutral-300 mb-8 flex items-center"
+            >
+              <motion.span 
+                animate={{ rotate: [0, -10, 10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="text-3xl mr-3"
+              >
+                🎯
+              </motion.span>
               Available Challenges
-            </h2>
+            </motion.h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {challenges.map((challenge) => (
-                <div key={challenge.id} className="group bg-white rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-emerald-400">
+              {challenges.map((challenge, index) => (
+                <motion.div 
+                  key={challenge.id} 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.6 + index * 0.1, duration: 0.6 }}
+                  className="card hover-lift group"
+                >
                   <div className="flex items-center justify-between mb-4">
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                      challenge.difficulty === 'easy' ? 'bg-emerald-100 text-emerald-800' :
-                      challenge.difficulty === 'medium' ? 'bg-amber-100 text-amber-800' :
-                      'bg-rose-100 text-rose-800'
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full font-satoshi ${
+                      challenge.difficulty === 'easy' ? 'bg-neon-green/20 text-neon-green border border-neon-green/30' :
+                      challenge.difficulty === 'medium' ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/30' :
+                      'bg-neon-pink/20 text-neon-pink border border-neon-pink/30'
                     }`}>
                       {challenge.difficulty.toUpperCase()}
                     </span>
-                    <span className="text-sm font-bold text-emerald-600">{challenge.points} pts</span>
+                    <span className="text-sm font-bold text-neon-green font-satoshi">{challenge.points} pts</span>
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-3 text-lg">{challenge.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{challenge.description}</p>
+                  <h3 className="font-clash font-bold text-neutral-300 mb-3 text-lg">{challenge.title}</h3>
+                  <p className="text-sm text-neutral-400 mb-4 line-clamp-2 font-satoshi">{challenge.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">{challenge.category}</span>
-                    <button 
+                    <span className="text-xs text-neutral-500 font-medium uppercase tracking-wide font-satoshi">{challenge.category}</span>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedChallenge(challenge)}
-                      className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="btn btn-primary text-sm font-satoshi"
                     >
                       Start
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            {challenges.length === 0 && (
-              <p className="text-gray-500 text-center col-span-full py-8">No challenges available at the moment</p>
-            )}
-          </div>
-        </div>
+              {challenges.length === 0 && (
+                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No challenges available at the moment</p>
+              )}
+            </div>
+          </motion.div>
 
           {/* Available Quizzes */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-cyan-100 p-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center">
-              <span className="text-3xl mr-3">🧠</span>
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.8, duration: 0.6 }}
+            className="glass-neon rounded-3xl shadow-neon-purple p-8"
+          >
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.9, duration: 0.6 }}
+              className="font-clash text-3xl font-bold text-neutral-300 mb-8 flex items-center"
+            >
+              <motion.span 
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                className="text-3xl mr-3"
+              >
+                🧠
+              </motion.span>
               Available Quizzes
-            </h2>
+            </motion.h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizzes.map((quiz) => (
-                <div key={quiz.id} className="group bg-white rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-cyan-400">
+              {quizzes.map((quiz, index) => (
+                <motion.div 
+                  key={quiz.id} 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 2 + index * 0.1, duration: 0.6 }}
+                  className="card hover-lift group"
+                >
                   <div className="flex items-center justify-between mb-4">
-                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-cyan-100 text-cyan-800">
+                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-neon-purple/20 text-neon-purple border border-neon-purple/30 font-satoshi">
                       QUIZ
                     </span>
-                    <span className="text-sm font-bold text-cyan-600">{quiz.points} pts</span>
+                    <span className="text-sm font-bold text-neon-purple font-satoshi">{quiz.points} pts</span>
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-3 text-lg">{quiz.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{quiz.questions?.length || 0} questions • {quiz.timeLimit || 10} min</p>
+                  <h3 className="font-clash font-bold text-neutral-300 mb-3 text-lg">{quiz.title}</h3>
+                  <p className="text-sm text-neutral-400 mb-4 font-satoshi">{quiz.questions?.length || 0} questions • {quiz.timeLimit || 10} min</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">{quiz.category}</span>
-                    <button 
+                    <span className="text-xs text-neutral-500 font-medium uppercase tracking-wide font-satoshi">{quiz.category}</span>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => setSelectedQuiz(quiz)}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="btn btn-primary text-sm font-satoshi"
                     >
                       Start
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            {quizzes.length === 0 && (
-              <p className="text-gray-500 text-center col-span-full py-8">No quizzes available at the moment</p>
-            )}
-          </div>
-        </div>
-
+              {quizzes.length === 0 && (
+                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No quizzes available at the moment</p>
+              )}
+            </div>
+          </motion.div>
           {/* Leaderboard */}
-          <Leaderboard />
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2.2, duration: 0.6 }}
+          >
+            <Leaderboard />
+          </motion.div>
 
-        {/* Modals */}
-        {selectedQuiz && (
-          <QuizTaker quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} />
-        )}
+          {/* Modals */}
+          {selectedQuiz && (
+            <QuizTaker quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} />
+          )}
 
-        {selectedChallenge && (
-          <ChallengeParticipant challenge={selectedChallenge} onClose={() => setSelectedChallenge(null)} />
-        )}
+          {selectedChallenge && (
+            <ChallengeParticipant challenge={selectedChallenge} onClose={() => setSelectedChallenge(null)} />
+          )}
 
-        {showEWasteReporter && (
-          <EWasteReporter onClose={() => setShowEWasteReporter(false)} />
-        )}
+          {showEWasteReporter && (
+            <EWasteReporter onClose={() => setShowEWasteReporter(false)} />
+          )}
         </div>
       </div>
     </ProtectedRoute>
