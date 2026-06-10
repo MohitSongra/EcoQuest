@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function CustomerLogin() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -15,7 +16,7 @@ export default function CustomerLogin() {
   const router = useRouter();
 
   // Redirect if already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (userRole?.role === 'admin') {
       router.push('/admin');
     } else if (userRole?.role === 'customer') {
@@ -28,6 +29,10 @@ export default function CustomerLogin() {
     
     if (isSignUp && password !== confirmPassword) {
       return setError('Passwords do not match');
+    }
+
+    if (isSignUp && password.length < 6) {
+      return setError('Password must be at least 6 characters');
     }
 
     try {
@@ -46,35 +51,84 @@ export default function CustomerLogin() {
     }
   };
 
+  const handleModeToggle = () => {
+    setIsSignUp(!isSignUp);
+    setError('');
+    setConfirmPassword('');
+    if (!isSignUp) setDisplayName('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-green-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-primary particle-bg py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full bg-[rgba(0,255,136,0.08)] blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 left-1/4 w-48 h-48 rounded-full bg-[rgba(0,255,255,0.06)] blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        className="relative z-10 max-w-md w-full space-y-8"
+      >
         <div className="text-center">
-          <div className="mx-auto h-20 w-20 bg-green-600 rounded-2xl flex items-center justify-center">
-            <span className="text-white text-3xl font-bold">♻</span>
-          </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            {isSignUp ? 'Join E-Waste Challenge' : 'Welcome Back'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="mx-auto h-20 w-20 glass-neon rounded-2xl flex items-center justify-center shadow-neon-green"
+          >
+            <span className="text-[#00ff88] text-3xl font-bold">♻</span>
+          </motion.div>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="mt-6 text-3xl font-bold text-neutral-100 font-[family-name:var(--font-clash-display)]"
+          >
+            {isSignUp ? 'Join EcoQuest' : 'Welcome Back'}
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mt-2 text-sm text-neutral-400 font-[family-name:var(--font-satoshi)]"
+          >
             {isSignUp 
-              ? 'Create your account and start recycling' 
-              : 'Sign in to your account'
+              ? 'Create your account and start your sustainability journey' 
+              : 'Sign in to continue your eco-journey'
             }
-          </p>
+          </motion.p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <motion.form 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="mt-8 space-y-6 card p-8" 
+          onSubmit={handleSubmit}
+        >
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-[family-name:var(--font-satoshi)]"
+              role="alert"
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
           <div className="space-y-4">
             {isSignUp && (
-              <div>
-                <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <label htmlFor="displayName" className="label-primary">
                   Full Name
                 </label>
                 <input
@@ -85,14 +139,14 @@ export default function CustomerLogin() {
                   required={isSignUp}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                  className="input-primary"
                   placeholder="John Doe"
                 />
-              </div>
+              </motion.div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="label-primary">
                 Email address
               </label>
               <input
@@ -103,13 +157,13 @@ export default function CustomerLogin() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                className="input-primary"
                 placeholder="john@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="label-primary">
                 Password
               </label>
               <input
@@ -120,14 +174,19 @@ export default function CustomerLogin() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                className="input-primary"
                 placeholder="••••••••"
               />
             </div>
 
             {isSignUp && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <label htmlFor="confirmPassword" className="label-primary">
                   Confirm Password
                 </label>
                 <input
@@ -138,10 +197,10 @@ export default function CustomerLogin() {
                   required={isSignUp}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                  className="input-primary"
                   placeholder="••••••••"
                 />
-              </div>
+              </motion.div>
             )}
           </div>
 
@@ -149,11 +208,11 @@ export default function CustomerLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-primary w-full text-base py-3"
             >
               {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="flex items-center justify-center">
+                  <div className="spinner-neon w-5 h-5 mr-2" style={{ borderWidth: '2px' }}></div>
                   {isSignUp ? 'Creating account...' : 'Signing in...'}
                 </div>
               ) : (
@@ -165,8 +224,8 @@ export default function CustomerLogin() {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-green-600 hover:text-green-500"
+              onClick={handleModeToggle}
+              className="text-sm text-[#00ff88] hover:text-[#4ade80] transition-colors font-[family-name:var(--font-satoshi)]"
             >
               {isSignUp 
                 ? 'Already have an account? Sign in' 
@@ -175,14 +234,20 @@ export default function CustomerLogin() {
             </button>
           </div>
 
-        </form>
+        </motion.form>
 
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            By signing up, you agree to our terms of service and privacy policy.
-          </p>
-        </div>
-      </div>
+        {isSignUp && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-center"
+          >
+            <p className="text-xs text-neutral-500 font-[family-name:var(--font-satoshi)]">
+              By signing up, you agree to our terms of service and privacy policy.
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   );
 }

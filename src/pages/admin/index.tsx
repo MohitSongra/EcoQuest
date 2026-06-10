@@ -10,52 +10,8 @@ import SampleDataSeeder from '../../components/SampleDataSeeder';
 import EWasteReportsManager from '../../components/admin/EWasteReportsManager';
 import RewardsManager from '../../components/admin/RewardsManager';
 import FixUserPoints from '../../components/admin/FixUserPoints';
-
-interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  status: 'active' | 'pending' | 'inactive';
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  requirements: string[];
-  estimatedTime: number; // in minutes
-  creator: string;
-  createdAt: Date;
-  imageUrl?: string;
-}
-
-interface Question {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-}
-
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  questions: Question[];
-  status: 'active' | 'draft' | 'inactive';
-  category: string;
-  points: number;
-  timeLimit: number; // in minutes
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt: Date;
-}
-
-interface User {
-  id: string;
-  email: string;
-  displayName?: string;
-  role: 'admin' | 'customer';
-  points: number;
-  status: 'active' | 'suspended';
-  createdAt: Date;
-}
+import Head from 'next/head';
+import { Challenge, Quiz, User } from '../../types';
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -66,7 +22,6 @@ export default function Admin() {
   const { logout, userRole } = useAuth();
   const router = useRouter();
 
-  // Mock stats - in real app these would be calculated from Firestore data
   const stats = {
     totalUsers: users.length,
     activeUsers: users.filter(u => u.status === 'active').length,
@@ -83,12 +38,11 @@ export default function Admin() {
     { id: 'challenges', name: 'Challenges', icon: '🎯' },
     { id: 'quizzes', name: 'Quizzes', icon: '🧠' },
     { id: 'rewards', name: 'Rewards', icon: '🎁' },
-    { id: 'ewaste', name: 'E-Waste Reports', icon: '♻️' },
+    { id: 'ewaste', name: 'E-Waste', icon: '♻️' },
     { id: 'reports', name: 'Analytics', icon: '📈' }
   ];
 
   useEffect(() => {
-    // Set up real-time listeners
     const unsubscribeChallenges = challengesService.listenToChallenges((challengesData) => {
       setChallenges(challengesData);
       setLoading(false);
@@ -102,7 +56,6 @@ export default function Admin() {
       setUsers(usersData);
     });
 
-    // Cleanup listeners on unmount
     return () => {
       unsubscribeChallenges();
       unsubscribeQuizzes();
@@ -143,97 +96,58 @@ export default function Admin() {
     }
   };
 
+  const statCards = [
+    { label: 'Total Users', value: stats.totalUsers, icon: '👥', color: '#00ffff' },
+    { label: 'Active Users', value: stats.activeUsers, icon: '✅', color: '#00ff88' },
+    { label: 'Total Points', value: stats.totalPoints.toLocaleString(), icon: '🏆', color: '#ff00ff' },
+    { label: 'Challenges', value: stats.totalChallenges, icon: '🎯', color: '#ffaa00' },
+    { label: 'Quizzes', value: stats.totalQuizzes, icon: '🧠', color: '#00ffff' },
+    { label: 'Active Challenges', value: stats.activeChallenges, icon: '🔥', color: '#00ff88' },
+  ];
+
   const renderOverview = () => (
     <div className="space-y-8">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.totalUsers}</p>
+        {statCards.map((stat, i) => (
+          <div key={i} className="card group hover:border-[rgba(0,255,136,0.3)] transition-all">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-500 font-[family-name:var(--font-satoshi)]">{stat.label}</p>
+                <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
+              </div>
+              <div className="text-3xl opacity-80" aria-hidden="true">{stat.icon}</div>
             </div>
-            <div className="text-3xl">👥</div>
           </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-green-600">{stats.activeUsers}</p>
-            </div>
-            <div className="text-3xl">✅</div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Points</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.totalPoints.toLocaleString()}</p>
-            </div>
-            <div className="text-3xl">🏆</div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Challenges</p>
-              <p className="text-2xl font-bold text-orange-600">{stats.totalChallenges}</p>
-            </div>
-            <div className="text-3xl">🎯</div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Quizzes</p>
-              <p className="text-2xl font-bold text-indigo-600">{stats.totalQuizzes}</p>
-            </div>
-            <div className="text-3xl">🧠</div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Challenges</p>
-              <p className="text-2xl font-bold text-green-600">{stats.activeChallenges}</p>
-            </div>
-            <div className="text-3xl">🔥</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Sample Data Seeder - Only show if no data exists */}
+      {/* Sample Data Seeder */}
       {(challenges.length === 0 && quizzes.length === 0) && (
         <SampleDataSeeder />
       )}
 
       {/* Pending Challenges */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Pending Challenge Approvals</h2>
+      <div className="card">
+        <h2 className="text-xl font-bold text-neutral-200 mb-6 font-[family-name:var(--font-clash-display)]">Pending Challenge Approvals</h2>
         <div className="space-y-4">
           {challenges.filter(c => c.status === 'pending').map((challenge) => (
-            <div key={challenge.id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+            <div key={challenge.id} className="flex items-center justify-between p-4 bg-[rgba(255,170,0,0.08)] rounded-xl border border-[rgba(255,170,0,0.2)]">
               <div>
-                <h3 className="font-semibold text-gray-800">{challenge.title}</h3>
-                <p className="text-sm text-gray-500">Created by: {challenge.creator}</p>
-                <p className="text-sm text-gray-500">Points: {challenge.points}</p>
+                <h3 className="font-semibold text-neutral-200">{challenge.title}</h3>
+                <p className="text-sm text-neutral-500">Created by: {challenge.creator}</p>
+                <p className="text-sm text-neutral-500">Points: {challenge.points}</p>
               </div>
               <div className="flex space-x-2">
                 <button 
                   onClick={() => handleChallengeStatus(challenge.id, 'active')}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  className="btn btn-primary btn-sm"
                 >
                   Approve
                 </button>
                 <button 
                   onClick={() => handleChallengeStatus(challenge.id, 'inactive')}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  className="btn btn-danger btn-sm"
                 >
                   Reject
                 </button>
@@ -241,7 +155,7 @@ export default function Admin() {
             </div>
           ))}
           {challenges.filter(c => c.status === 'pending').length === 0 && (
-            <p className="text-gray-500 text-center py-4">No pending challenges</p>
+            <p className="text-neutral-500 text-center py-4 font-[family-name:var(--font-satoshi)]">No pending challenges</p>
           )}
         </div>
       </div>
@@ -266,8 +180,8 @@ export default function Admin() {
 
   const renderEWasteReports = () => (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">E-Waste Device Reports</h2>
+      <div className="card">
+        <h2 className="text-xl font-bold text-neutral-200 mb-6 font-[family-name:var(--font-clash-display)]">E-Waste Device Reports</h2>
         <EWasteReportsManager />
       </div>
       <FixUserPoints />
@@ -275,28 +189,28 @@ export default function Admin() {
   );
 
   const renderReports = () => (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Analytics & Reports</h2>
+    <div className="card">
+      <h2 className="text-xl font-bold text-neutral-200 mb-6 font-[family-name:var(--font-clash-display)]">Analytics & Reports</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-blue-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-blue-800 mb-2">User Growth</h3>
-          <p className="text-2xl font-bold text-blue-600">+12.5%</p>
-          <p className="text-sm text-blue-600">vs last month</p>
+        <div className="bg-[rgba(0,255,255,0.08)] p-5 rounded-xl border border-[rgba(0,255,255,0.2)]">
+          <h3 className="font-semibold text-[#00ffff] mb-2 font-[family-name:var(--font-satoshi)]">User Growth</h3>
+          <p className="text-2xl font-bold text-[#00ffff]">+12.5%</p>
+          <p className="text-sm text-neutral-500">vs last month</p>
         </div>
-        <div className="bg-green-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-green-800 mb-2">Challenge Completion</h3>
-          <p className="text-2xl font-bold text-green-600">78%</p>
-          <p className="text-sm text-green-600">average completion rate</p>
+        <div className="bg-[rgba(0,255,136,0.08)] p-5 rounded-xl border border-[rgba(0,255,136,0.2)]">
+          <h3 className="font-semibold text-[#00ff88] mb-2 font-[family-name:var(--font-satoshi)]">Challenge Completion</h3>
+          <p className="text-2xl font-bold text-[#00ff88]">78%</p>
+          <p className="text-sm text-neutral-500">average completion rate</p>
         </div>
-        <div className="bg-purple-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-purple-800 mb-2">Quiz Performance</h3>
-          <p className="text-2xl font-bold text-purple-600">82%</p>
-          <p className="text-sm text-purple-600">average score</p>
+        <div className="bg-[rgba(255,0,255,0.08)] p-5 rounded-xl border border-[rgba(255,0,255,0.2)]">
+          <h3 className="font-semibold text-[#ff00ff] mb-2 font-[family-name:var(--font-satoshi)]">Quiz Performance</h3>
+          <p className="text-2xl font-bold text-[#ff00ff]">82%</p>
+          <p className="text-sm text-neutral-500">average score</p>
         </div>
-        <div className="bg-orange-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-orange-800 mb-2">Points Distribution</h3>
-          <p className="text-2xl font-bold text-orange-600">45.6K</p>
-          <p className="text-sm text-orange-600">total points awarded</p>
+        <div className="bg-[rgba(255,170,0,0.08)] p-5 rounded-xl border border-[rgba(255,170,0,0.2)]">
+          <h3 className="font-semibold text-[#ffaa00] mb-2 font-[family-name:var(--font-satoshi)]">Points Distribution</h3>
+          <p className="text-2xl font-bold text-[#ffaa00]">{stats.totalPoints.toLocaleString()}</p>
+          <p className="text-sm text-neutral-500">total points awarded</p>
         </div>
       </div>
     </div>
@@ -315,73 +229,84 @@ export default function Admin() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading admin data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <ProtectedRoute requiredRole="admin">
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        {/* Animated Background Pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2LTIuNjkgNi02cy0yLjY5LTYtNi02LTYgMi42OS02IDYgMi42OSA2IDYgNnptMCAxMmMzLjMxIDAgNi0yLjY5IDYtNnMtMi42OS02LTYtNi02IDIuNjktNiA2IDIuNjkgNiA2IDZ6bTAgMTJjMy4zMSAwIDYtMi42OSA2LTZzLTIuNjktNi02LTYtNiAyLjY5LTYgNiAyLjY5IDYgNiA2ek0xMiAxNGMzLjMxIDAgNi0yLjY5IDYtNnMtMi42OS02LTYtNi02IDIuNjktNiA2IDIuNjkgNiA2IDZ6bTAgMTJjMy4zMSAwIDYtMi42OSA2LTZzLTIuNjktNi02LTYtNiAyLjY5LTYgNiAyLjY5IDYgNiA2em0wIDEyYzMuMzEgMCA2LTIuNjkgNi02cy0yLjY5LTYtNi02LTYgMi42OS02IDYgMi42OSA2IDYgNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
-        
-        <div className="relative z-10 space-y-6 p-6">
-          {/* Header */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <span className="text-3xl">⚡</span>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold text-white mb-1 tracking-tight">Admin Control Center</h1>
-                  <p className="text-purple-200 text-sm">
-                    Manage users, challenges, quizzes, and monitor platform performance
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-purple-300 mb-1">Logged in as</p>
-                <p className="text-sm text-white font-semibold">
-                  {userRole?.displayName || userRole?.email}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-3">
-            <div className="flex flex-wrap gap-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-3 px-6 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 ${
-                    activeTab === tab.id
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50'
-                      : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
-                  }`}
-                >
-                  <span className="text-2xl">{tab.icon}</span>
-                  <span className="text-sm">{tab.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8">
-            {renderContent()}
+      <Head>
+        <title>Admin — EcoQuest</title>
+        <meta name="description" content="EcoQuest admin control center" />
+      </Head>
+      
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center bg-primary">
+          <div className="text-center">
+            <div className="spinner-neon mx-auto"></div>
+            <p className="mt-4 text-neutral-400 font-[family-name:var(--font-satoshi)]">Loading admin data...</p>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="min-h-screen bg-primary particle-bg">
+          <div className="relative z-10 space-y-6 p-4 sm:p-6 pt-24">
+            {/* Header */}
+            <div className="card p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 glass-neon rounded-2xl flex items-center justify-center shadow-neon-green">
+                    <span className="text-3xl" aria-hidden="true">⚡</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-neutral-100 tracking-tight font-[family-name:var(--font-clash-display)]">
+                      Admin <span className="text-gradient">Control Center</span>
+                    </h1>
+                    <p className="text-neutral-500 text-sm font-[family-name:var(--font-satoshi)]">
+                      Manage users, challenges, quizzes, and monitor platform performance
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-xs text-neutral-500">Logged in as</p>
+                    <p className="text-sm text-neutral-200 font-semibold font-[family-name:var(--font-satoshi)]">
+                      {userRole?.displayName || userRole?.email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="btn btn-danger btn-sm"
+                    title="Log out"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="card p-3 overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 whitespace-nowrap font-[family-name:var(--font-satoshi)] ${
+                      activeTab === tab.id
+                        ? 'bg-[#00ff88] text-black shadow-[0_0_20px_rgba(0,255,136,0.3)]'
+                        : 'text-neutral-400 hover:bg-[rgba(0,255,136,0.08)] hover:text-neutral-200'
+                    }`}
+                  >
+                    <span aria-hidden="true">{tab.icon}</span>
+                    <span>{tab.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div>
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }

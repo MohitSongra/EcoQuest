@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +11,7 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ 
   children, 
   requiredRole, 
-  redirectTo = '/' 
+  redirectTo = '/login' 
 }: ProtectedRouteProps) {
   const { currentUser, userRole, loading } = useAuth();
   const router = useRouter();
@@ -39,10 +38,10 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-primary">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="spinner-neon mx-auto"></div>
+          <p className="mt-4 text-neutral-400 font-[family-name:var(--font-satoshi)]">Loading...</p>
         </div>
       </div>
     );

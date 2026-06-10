@@ -6,6 +6,12 @@ export default function EWasteReportsManager() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'collected' | 'processed'>('all');
   const [selectedReport, setSelectedReport] = useState<EWasteReport | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 4000);
+  };
 
   useEffect(() => {
     // Set up real-time listener for e-waste reports
@@ -41,7 +47,7 @@ export default function EWasteReportsManager() {
       // The real-time listener will automatically update the UI
     } catch (error) {
       console.error('Error updating report status:', error);
-      alert('Failed to update report status. Please try again.');
+      showMessage('error', 'Failed to update report status. Please try again.');
     }
   };
 
@@ -70,26 +76,26 @@ export default function EWasteReportsManager() {
   const getConditionBadge = (condition: string) => {
     switch (condition) {
       case 'working':
-        return 'bg-green-100 text-green-800';
+        return 'badge-success';
       case 'partially-working':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'badge-warning';
       case 'broken':
-        return 'bg-red-100 text-red-800';
+        return 'badge-danger';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'badge-info';
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'badge-warning';
       case 'collected':
-        return 'bg-blue-100 text-blue-800';
+        return 'badge-info';
       case 'processed':
-        return 'bg-green-100 text-green-800';
+        return 'badge-success';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'badge-info';
     }
   };
 
@@ -139,8 +145,8 @@ export default function EWasteReportsManager() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading e-waste reports...</p>
+          <div className="spinner-neon mx-auto"></div>
+          <p className="mt-4 text-neutral-400 animate-pulse">Loading e-waste reports...</p>
         </div>
       </div>
     );
@@ -148,39 +154,50 @@ export default function EWasteReportsManager() {
 
   return (
     <div className="space-y-6">
+      {/* Inline Message */}
+      {message && (
+        <div className={`rounded-xl px-4 py-3 text-sm font-medium ${
+          message.type === 'success'
+            ? 'bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.3)] text-[#00ff88]'
+            : 'bg-red-500/10 border border-red-500/30 text-red-400'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-green-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-green-800 mb-2">Total Devices</h3>
-          <p className="text-2xl font-bold text-green-600">{stats.total}</p>
-          <p className="text-sm text-green-600">devices reported</p>
+        <div className="card !bg-[rgba(0,255,136,0.05)] !border-[rgba(0,255,136,0.15)]">
+          <h3 className="font-semibold text-[#00ff88] mb-2 font-[family-name:var(--font-clash-display)]">Total Devices</h3>
+          <p className="text-2xl font-bold text-[#00ff88]">{stats.total}</p>
+          <p className="text-sm text-neutral-500">devices reported</p>
         </div>
-        <div className="bg-blue-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-blue-800 mb-2">This Month</h3>
-          <p className="text-2xl font-bold text-blue-600">{stats.thisMonth}</p>
-          <p className="text-sm text-blue-600">new reports</p>
+        <div className="card !bg-[rgba(0,255,255,0.05)] !border-[rgba(0,255,255,0.15)]">
+          <h3 className="font-semibold text-[#00ffff] mb-2 font-[family-name:var(--font-clash-display)]">This Month</h3>
+          <p className="text-2xl font-bold text-[#00ffff]">{stats.thisMonth}</p>
+          <p className="text-sm text-neutral-500">new reports</p>
         </div>
-        <div className="bg-purple-50 p-4 rounded-xl">
-          <h3 className="font-semibold text-purple-800 mb-2">Categories</h3>
-          <p className="text-2xl font-bold text-purple-600">{stats.deviceTypes}</p>
-          <p className="text-sm text-purple-600">device types</p>
+        <div className="card !bg-[rgba(255,0,255,0.05)] !border-[rgba(255,0,255,0.15)]">
+          <h3 className="font-semibold text-[#ff00ff] mb-2 font-[family-name:var(--font-clash-display)]">Categories</h3>
+          <p className="text-2xl font-bold text-[#ff00ff]">{stats.deviceTypes}</p>
+          <p className="text-sm text-neutral-500">device types</p>
         </div>
       </div>
 
       {/* Status Summary */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200">
+      <div className="card">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-sm text-gray-600">Pending</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <p className="text-sm text-neutral-500">Pending</p>
+            <p className="text-2xl font-bold text-[#ffaa00]">{stats.pending}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Collected</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.collected}</p>
+            <p className="text-sm text-neutral-500">Collected</p>
+            <p className="text-2xl font-bold text-[#00ffff]">{stats.collected}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Processed</p>
-            <p className="text-2xl font-bold text-green-600">{stats.processed}</p>
+            <p className="text-sm text-neutral-500">Processed</p>
+            <p className="text-2xl font-bold text-[#00ff88]">{stats.processed}</p>
           </div>
         </div>
       </div>
@@ -191,10 +208,10 @@ export default function EWasteReportsManager() {
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-xl font-medium transition-all ${
               filter === status
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-[#00ff88] text-black shadow-[0_0_20px_rgba(0,255,136,0.3)]'
+                : 'bg-black/40 text-neutral-400 border border-[rgba(0,255,136,0.1)] hover:bg-[rgba(0,255,136,0.05)] hover:text-neutral-300'
             }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -206,10 +223,10 @@ export default function EWasteReportsManager() {
       {/* Reports List */}
       <div className="space-y-4">
         {filteredReports.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl">
+          <div className="text-center py-12 card">
             <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Reports Found</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold text-neutral-300 mb-2 font-[family-name:var(--font-clash-display)]">No Reports Found</h3>
+            <p className="text-neutral-500">
               {filter === 'all' 
                 ? 'No e-waste reports have been submitted yet.' 
                 : `No ${filter} reports at the moment.`}
@@ -217,31 +234,31 @@ export default function EWasteReportsManager() {
           </div>
         ) : (
           filteredReports.map((report) => (
-            <div key={report.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+            <div key={report.id} className="card hover:shadow-[0_0_20px_rgba(0,255,136,0.1)] transition-all">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4 flex-1">
                   <div className="text-4xl">{getDeviceIcon(report.deviceType)}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-neutral-200">
                         {report.brand} {report.model || report.deviceType}
                       </h3>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getConditionBadge(report.condition)}`}>
+                      <span className={`badge ${getConditionBadge(report.condition)}`}>
                         {report.condition}
                       </span>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(report.status)}`}>
+                      <span className={`badge ${getStatusBadge(report.status)}`}>
                         {report.status}
                       </span>
                     </div>
                     
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p><strong>Device Type:</strong> {report.deviceType}</p>
-                      <p><strong>Location:</strong> {report.location}</p>
-                      {report.description && <p><strong>Description:</strong> {report.description}</p>}
+                    <div className="space-y-1 text-sm text-neutral-400">
+                      <p><strong className="text-neutral-300">Device Type:</strong> {report.deviceType}</p>
+                      <p><strong className="text-neutral-300">Location:</strong> {report.location}</p>
+                      {report.description && <p><strong className="text-neutral-300">Description:</strong> {report.description}</p>}
                       {report.estimatedValue && (
-                        <p><strong>Estimated Value:</strong> ${report.estimatedValue.toFixed(2)}</p>
+                        <p><strong className="text-neutral-300">Estimated Value:</strong> ${report.estimatedValue.toFixed(2)}</p>
                       )}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neutral-500">
                         Reported {formatDate(report.reportedAt)} • ID: {report.id.slice(0, 8)}
                       </p>
                     </div>
@@ -254,13 +271,13 @@ export default function EWasteReportsManager() {
                     <>
                       <button
                         onClick={() => handleStatusUpdate(report.id, 'collected')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                        className="btn btn-secondary !text-sm !px-4 !py-2 whitespace-nowrap"
                       >
                         Mark Collected
                       </button>
                       <button
                         onClick={() => handleStatusUpdate(report.id, 'processed')}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                        className="btn btn-primary !text-sm !px-4 !py-2 whitespace-nowrap"
                       >
                         Mark Processed
                       </button>
@@ -270,13 +287,13 @@ export default function EWasteReportsManager() {
                     <>
                       <button
                         onClick={() => handleStatusUpdate(report.id, 'processed')}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                        className="btn btn-primary !text-sm !px-4 !py-2 whitespace-nowrap"
                       >
                         Mark Processed
                       </button>
                       <button
                         onClick={() => handleStatusUpdate(report.id, 'pending')}
-                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                        className="btn btn-outline !text-sm !px-4 !py-2 whitespace-nowrap"
                       >
                         Back to Pending
                       </button>
@@ -285,7 +302,7 @@ export default function EWasteReportsManager() {
                   {report.status === 'processed' && (
                     <button
                       onClick={() => handleStatusUpdate(report.id, 'collected')}
-                      className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                      className="btn btn-outline !text-sm !px-4 !py-2 whitespace-nowrap"
                     >
                       Back to Collected
                     </button>

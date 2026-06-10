@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { rewardsService, rewardRedemptionsService, Reward, usersService } from '../../services/firestoreService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -8,6 +8,7 @@ export default function RewardsStore() {
   const [loading, setLoading] = useState(true);
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -24,6 +25,18 @@ export default function RewardsStore() {
 
     return unsubscribeRewards;
   }, [currentUser]);
+
+  // Escape key handler for modal
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && selectedReward) {
+      setSelectedReward(null);
+    }
+  }, [selectedReward]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const fetchUserPoints = async () => {
     if (!currentUser) return;
@@ -45,7 +58,8 @@ export default function RewardsStore() {
     if (!selectedReward || !currentUser) return;
 
     if (userPoints < selectedReward.pointsCost) {
-      alert('Insufficient points!');
+      setMessage({ type: 'error', text: 'Insufficient points!' });
+      setTimeout(() => setMessage(null), 3000);
       return;
     }
 
@@ -76,11 +90,13 @@ export default function RewardsStore() {
         stock: selectedReward.stock - 1
       });
 
-      alert(`Reward redeemed successfully! Your coupon code: ${couponCode}`);
+      setMessage({ type: 'success', text: `Reward redeemed successfully! Your coupon code: ${couponCode}` });
       setSelectedReward(null);
+      setTimeout(() => setMessage(null), 5000);
     } catch (error) {
       console.error('Error redeeming reward:', error);
-      alert('Failed to redeem reward. Please try again.');
+      setMessage({ type: 'error', text: 'Failed to redeem reward. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
     } finally {
       setRedeeming(false);
     }
@@ -101,23 +117,34 @@ export default function RewardsStore() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+        <div className="spinner-neon"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-[family-name:var(--font-satoshi)]">
+      {/* Inline message */}
+      {message && (
+        <div className={`p-4 rounded-xl border ${
+          message.type === 'success'
+            ? 'bg-[rgba(0,255,136,0.1)] text-[#00ff88] border-[rgba(0,255,136,0.3)]'
+            : 'bg-red-500/10 text-red-400 border-red-500/30'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       {/* User Points Display */}
-      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-3xl shadow-2xl p-8 text-white">
+      <div className="bg-black/80 backdrop-blur-xl border border-[rgba(0,255,136,0.2)] rounded-3xl shadow-[0_0_30px_rgba(0,255,136,0.15)] p-8">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-purple-100 text-sm font-medium mb-2">Your Available Points</p>
-            <p className="text-5xl font-bold">{userPoints}</p>
+            <p className="text-neutral-400 text-sm font-medium mb-2">Your Available Points</p>
+            <p className="text-5xl font-bold text-[#00ff88] font-[family-name:var(--font-clash-display)] drop-shadow-[0_0_15px_rgba(0,255,136,0.5)]">{userPoints}</p>
           </div>
           <div className="text-7xl opacity-80">💎</div>
         </div>
-        <p className="text-purple-100 text-sm mt-4">
+        <p className="text-neutral-500 text-sm mt-4">
           Redeem your points for amazing rewards and discounts!
         </p>
       </div>
@@ -130,38 +157,38 @@ export default function RewardsStore() {
           return (
             <div
               key={reward.id}
-              className={`group bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${
-                affordable ? 'border-transparent hover:border-emerald-400' : 'border-gray-200 opacity-75'
+              className={`group bg-black/80 backdrop-blur-xl rounded-2xl p-6 border transition-all duration-300 ${
+                affordable ? 'border-[rgba(0,255,136,0.15)] hover:border-[#00ff88] hover:shadow-[0_0_30px_rgba(0,255,136,0.2)]' : 'border-[rgba(0,255,136,0.1)] opacity-75'
               }`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="text-5xl">{getTypeIcon(reward.type)}</div>
                 <div className="text-right">
-                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-800 uppercase">
+                  <span className="badge badge-purple uppercase">
                     {reward.type}
                   </span>
-                  <p className="text-xs text-gray-500 mt-2">Stock: {reward.stock}</p>
+                  <p className="text-xs text-neutral-500 mt-2">Stock: {reward.stock}</p>
                 </div>
               </div>
 
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{reward.title}</h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">{reward.description}</p>
+              <h3 className="text-xl font-bold text-neutral-200 mb-2 font-[family-name:var(--font-clash-display)]">{reward.title}</h3>
+              <p className="text-sm text-neutral-400 mb-4 line-clamp-2">{reward.description}</p>
 
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 mb-4">
+              <div className="bg-[rgba(0,255,136,0.05)] border border-[rgba(0,255,136,0.1)] rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Reward Value</span>
-                  <span className="text-2xl font-bold text-emerald-600">
+                  <span className="text-sm text-neutral-400">Reward Value</span>
+                  <span className="text-2xl font-bold text-[#00ff88]">
                     {reward.valueType === 'percentage' ? `${reward.value}% OFF` : `₹${reward.value}`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Points Cost</span>
-                  <span className="text-xl font-bold text-purple-600">{reward.pointsCost} pts</span>
+                  <span className="text-sm text-neutral-400">Points Cost</span>
+                  <span className="text-xl font-bold text-[#ff00ff]">{reward.pointsCost} pts</span>
                 </div>
               </div>
 
               {reward.termsAndConditions && (
-                <p className="text-xs text-gray-500 mb-4 line-clamp-2">
+                <p className="text-xs text-neutral-500 mb-4 line-clamp-2">
                   T&C: {reward.termsAndConditions}
                 </p>
               )}
@@ -171,8 +198,8 @@ export default function RewardsStore() {
                 disabled={!affordable}
                 className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
                   affordable
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'btn btn-primary w-full'
+                    : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-[rgba(0,255,136,0.1)]'
                 }`}
               >
                 {affordable ? 'Redeem Now' : 'Insufficient Points'}
@@ -183,39 +210,39 @@ export default function RewardsStore() {
       </div>
 
       {rewards.length === 0 && (
-        <div className="text-center py-12 bg-white/80 rounded-3xl">
+        <div className="text-center py-12 card">
           <div className="text-6xl mb-4">🎁</div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No Rewards Available</h3>
-          <p className="text-gray-600">Check back later for exciting rewards!</p>
+          <h3 className="text-xl font-semibold text-neutral-300 mb-2 font-[family-name:var(--font-clash-display)]">No Rewards Available</h3>
+          <p className="text-neutral-500">Check back later for exciting rewards!</p>
         </div>
       )}
 
       {/* Redemption Confirmation Modal */}
       {selectedReward && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-content p-8 max-w-md w-full">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">{getTypeIcon(selectedReward.type)}</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Confirm Redemption</h2>
-              <p className="text-gray-600">Are you sure you want to redeem this reward?</p>
+              <h2 className="text-2xl font-bold text-neutral-200 mb-2 font-[family-name:var(--font-clash-display)]">Confirm Redemption</h2>
+              <p className="text-neutral-400">Are you sure you want to redeem this reward?</p>
             </div>
 
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-6">
-              <h3 className="font-bold text-gray-800 mb-4">{selectedReward.title}</h3>
+            <div className="bg-[rgba(0,255,136,0.05)] border border-[rgba(0,255,136,0.15)] rounded-2xl p-6 mb-6">
+              <h3 className="font-bold text-neutral-200 mb-4">{selectedReward.title}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Reward Value:</span>
-                  <span className="font-bold text-emerald-600">
+                  <span className="text-neutral-400">Reward Value:</span>
+                  <span className="font-bold text-[#00ff88]">
                     {selectedReward.valueType === 'percentage' ? `${selectedReward.value}%` : `₹${selectedReward.value}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Points Cost:</span>
-                  <span className="font-bold text-purple-600">{selectedReward.pointsCost} pts</span>
+                  <span className="text-neutral-400">Points Cost:</span>
+                  <span className="font-bold text-[#ff00ff]">{selectedReward.pointsCost} pts</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-purple-200">
-                  <span className="text-gray-600">Your Points After:</span>
-                  <span className="font-bold text-blue-600">{userPoints - selectedReward.pointsCost} pts</span>
+                <div className="flex justify-between pt-2 border-t border-[rgba(0,255,136,0.15)]">
+                  <span className="text-neutral-400">Your Points After:</span>
+                  <span className="font-bold text-[#00ffff]">{userPoints - selectedReward.pointsCost} pts</span>
                 </div>
               </div>
             </div>
@@ -224,14 +251,15 @@ export default function RewardsStore() {
               <button
                 onClick={() => setSelectedReward(null)}
                 disabled={redeeming}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+                aria-label="Close"
+                className="btn btn-outline flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRedeem}
                 disabled={redeeming}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg disabled:opacity-50"
+                className="btn btn-primary flex-1"
               >
                 {redeeming ? 'Redeeming...' : 'Confirm'}
               </button>

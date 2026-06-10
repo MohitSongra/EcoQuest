@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { challengesService, challengeParticipationsService } from '../../services/firestoreService';
 
@@ -43,6 +43,22 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
     return unsubscribe;
   }, []);
 
+  // Escape key handler
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      if (selectedChallenge) {
+        setSelectedChallenge(null);
+      } else {
+        onClose();
+      }
+    }
+  }, [selectedChallenge, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   const handleParticipate = async () => {
     if (!selectedChallenge || !currentUser) return;
 
@@ -77,25 +93,26 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
 
   if (selectedChallenge) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="modal-overlay" role="dialog" aria-modal="true">
+        <div className="modal-content p-8 max-w-2xl w-full mx-4 font-[family-name:var(--font-satoshi)]">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Participate in Challenge</h2>
+            <h2 className="text-2xl font-bold text-neutral-200 font-[family-name:var(--font-clash-display)]">Participate in Challenge</h2>
             <button
               onClick={() => setSelectedChallenge(null)}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-neutral-500 hover:text-[#00ff88] text-2xl transition-colors"
+              aria-label="Close"
             >
               ×
             </button>
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">{selectedChallenge.title}</h3>
-            <p className="text-gray-600 mb-4">{selectedChallenge.description}</p>
+            <h3 className="text-xl font-semibold text-neutral-200 mb-2 font-[family-name:var(--font-clash-display)]">{selectedChallenge.title}</h3>
+            <p className="text-neutral-400 mb-4">{selectedChallenge.description}</p>
             
-            <div className="bg-blue-50 rounded-lg p-4 mb-6">
-              <h4 className="font-semibold text-blue-800 mb-2">Requirements:</h4>
-              <ul className="list-disc list-inside text-blue-700 space-y-1">
+            <div className="bg-[rgba(0,255,255,0.05)] border border-[rgba(0,255,255,0.15)] rounded-xl p-4 mb-6">
+              <h4 className="font-semibold text-[#00ffff] mb-2">Requirements:</h4>
+              <ul className="list-disc list-inside text-neutral-300 space-y-1">
                 {selectedChallenge.requirements.map((req, index) => (
                   <li key={index}>{req}</li>
                 ))}
@@ -104,10 +121,10 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
           </div>
 
           {submitStatus && (
-            <div className={`mb-4 p-3 rounded-lg ${
+            <div className={`mb-4 p-3 rounded-xl ${
               submitStatus.includes('Error') 
-                ? 'bg-red-50 text-red-700 border border-red-200' 
-                : 'bg-green-50 text-green-700 border border-green-200'
+                ? 'bg-red-500/10 text-red-400 border border-red-500/30' 
+                : 'bg-[rgba(0,255,136,0.1)] text-[#00ff88] border border-[rgba(0,255,136,0.3)]'
             }`}>
               {submitStatus}
             </div>
@@ -115,13 +132,13 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="label-primary">
                 Description of your participation
               </label>
               <textarea
                 value={participationData.description}
                 onChange={(e) => setParticipationData({...participationData, description: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="textarea-primary"
                 rows={4}
                 placeholder="Describe how you completed this challenge..."
                 required
@@ -129,27 +146,27 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="label-primary">
                 Evidence/Proof (URL or description)
               </label>
               <input
                 type="text"
                 value={participationData.evidence}
                 onChange={(e) => setParticipationData({...participationData, evidence: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-primary"
                 placeholder="Photo URL, document link, or description of evidence..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="label-primary">
                 Location
               </label>
               <input
                 type="text"
                 value={participationData.location}
                 onChange={(e) => setParticipationData({...participationData, location: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="input-primary"
                 placeholder="Where did you complete this challenge?"
                 required
               />
@@ -159,7 +176,7 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
           <div className="flex justify-between mt-6">
             <button
               onClick={() => setSelectedChallenge(null)}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="btn btn-outline"
               disabled={isSubmitting}
             >
               Cancel
@@ -167,7 +184,7 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
             <button
               onClick={handleParticipate}
               disabled={!participationData.description || !participationData.location || isSubmitting}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Submitting...' : 'Submit Participation'}
             </button>
@@ -178,13 +195,14 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <div className="modal-content p-8 max-w-4xl w-full mx-4 font-[family-name:var(--font-satoshi)]">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Available Challenges</h2>
+          <h2 className="text-2xl font-bold text-neutral-200 font-[family-name:var(--font-clash-display)]">Available Challenges</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-neutral-500 hover:text-[#00ff88] text-2xl transition-colors"
+            aria-label="Close"
           >
             ×
           </button>
@@ -192,28 +210,28 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {challenges.map((challenge) => (
-            <div key={challenge.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+            <div key={challenge.id} className="card hover:border-[rgba(0,255,136,0.3)] hover:shadow-[0_0_20px_rgba(0,255,136,0.15)] transition-all">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-semibold text-gray-800">{challenge.title}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  challenge.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                  challenge.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
+                <h3 className="text-xl font-semibold text-neutral-200 font-[family-name:var(--font-clash-display)]">{challenge.title}</h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  challenge.difficulty === 'easy' ? 'bg-[rgba(0,255,136,0.2)] text-[#00ff88] border border-[rgba(0,255,136,0.3)]' :
+                  challenge.difficulty === 'medium' ? 'bg-[rgba(255,170,0,0.2)] text-[#ffaa00] border border-[rgba(255,170,0,0.3)]' :
+                  'bg-[rgba(255,60,60,0.2)] text-[#ff3c3c] border border-[rgba(255,60,60,0.3)]'
                 }`}>
                   {challenge.difficulty}
                 </span>
               </div>
               
-              <p className="text-gray-600 mb-4">{challenge.description}</p>
+              <p className="text-neutral-400 mb-4">{challenge.description}</p>
               
-              <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+              <div className="flex justify-between items-center text-sm text-neutral-500 mb-4">
                 <span>⏱️ {challenge.estimatedTime} min</span>
-                <span>🏆 {challenge.points} points</span>
+                <span className="text-[#00ff88]">🏆 {challenge.points} points</span>
               </div>
               
               <button
                 onClick={() => setSelectedChallenge(challenge)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                className="btn btn-primary w-full"
               >
                 Participate
               </button>
@@ -224,8 +242,8 @@ export function ChallengeParticipant({ challenge, onClose }: ChallengeParticipan
         {challenges.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Challenges Available</h3>
-            <p className="text-gray-600">Check back later for new challenges!</p>
+            <h3 className="text-xl font-semibold text-neutral-300 mb-2 font-[family-name:var(--font-clash-display)]">No Challenges Available</h3>
+            <p className="text-neutral-500">Check back later for new challenges!</p>
           </div>
         )}
       </div>

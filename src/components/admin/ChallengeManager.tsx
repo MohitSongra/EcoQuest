@@ -35,6 +35,12 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
     estimatedTime: 30,
     imageUrl: ''
   });
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 4000);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -64,9 +70,10 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
       await addDoc(collection(db, 'challenges'), challengeData);
       onChallengesUpdate();
       resetForm();
+      showMessage('success', 'Challenge created successfully!');
     } catch (error) {
       console.error('Error creating challenge:', error);
-      alert('Error creating challenge. Please try again.');
+      showMessage('error', 'Error creating challenge. Please try again.');
     }
   };
 
@@ -81,21 +88,23 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
       await updateDoc(doc(db, 'challenges', editingChallenge.id), updateData);
       onChallengesUpdate();
       resetForm();
+      showMessage('success', 'Challenge updated successfully!');
     } catch (error) {
       console.error('Error updating challenge:', error);
-      alert('Error updating challenge. Please try again.');
+      showMessage('error', 'Error updating challenge. Please try again.');
     }
   };
 
   const handleDeleteChallenge = async (challengeId: string) => {
-    if (!confirm('Are you sure you want to delete this challenge?')) return;
+    if (!window.confirm('Are you sure you want to delete this challenge?')) return;
     
     try {
       await deleteDoc(doc(db, 'challenges', challengeId));
       onChallengesUpdate();
+      showMessage('success', 'Challenge deleted.');
     } catch (error) {
       console.error('Error deleting challenge:', error);
-      alert('Error deleting challenge. Please try again.');
+      showMessage('error', 'Error deleting challenge. Please try again.');
     }
   };
 
@@ -146,12 +155,23 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
 
   return (
     <div className="space-y-6">
+      {/* Inline Message */}
+      {message && (
+        <div className={`rounded-xl px-4 py-3 text-sm font-medium ${
+          message.type === 'success'
+            ? 'bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.3)] text-[#00ff88]'
+            : 'bg-red-500/10 border border-red-500/30 text-red-400'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Challenge Management</h2>
+        <h2 className="text-2xl font-bold text-neutral-200 font-[family-name:var(--font-clash-display)]">Challenge Management</h2>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          className="btn btn-primary"
         >
           + Create New Challenge
         </button>
@@ -159,29 +179,29 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
 
       {/* Create/Edit Form */}
       {showCreateForm && (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">
+        <div className="card">
+          <h3 className="text-xl font-bold text-neutral-200 mb-6 font-[family-name:var(--font-clash-display)]">
             {editingChallenge ? 'Edit Challenge' : 'Create New Challenge'}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+              <label className="label-primary">Title</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-primary"
                 placeholder="Enter challenge title"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <label className="label-primary">Category</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="select-primary"
               >
                 <option value="">Select category</option>
                 <option value="Collection">Collection</option>
@@ -194,35 +214,35 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Points</label>
+              <label className="label-primary">Points</label>
               <input
                 type="number"
                 value={formData.points}
                 onChange={(e) => setFormData(prev => ({ ...prev, points: parseInt(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-primary"
                 min="10"
                 max="2000"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Time (minutes)</label>
+              <label className="label-primary">Estimated Time (minutes)</label>
               <input
                 type="number"
                 value={formData.estimatedTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, estimatedTime: parseInt(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-primary"
                 min="5"
                 max="300"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+              <label className="label-primary">Difficulty</label>
               <select
                 value={formData.difficulty}
                 onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value as 'easy' | 'medium' | 'hard' }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="select-primary"
               >
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -231,23 +251,23 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Image URL (Optional)</label>
+              <label className="label-primary">Image URL (Optional)</label>
               <input
                 type="url"
                 value={formData.imageUrl}
                 onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-primary"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
           </div>
           
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="label-primary">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="textarea-primary"
               rows={4}
               placeholder="Describe the challenge and what participants need to do"
             />
@@ -256,11 +276,11 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
           {/* Requirements */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <label className="block text-sm font-medium text-gray-700">Requirements</label>
+              <label className="label-primary">Requirements</label>
               <button
                 type="button"
                 onClick={addRequirement}
-                className="text-green-600 hover:text-green-700 text-sm font-medium"
+                className="text-[#00ff88] hover:text-[#4ade80] text-sm font-medium transition-colors"
               >
                 + Add Requirement
               </button>
@@ -272,14 +292,14 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
                     type="text"
                     value={requirement}
                     onChange={(e) => updateRequirement(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="input-primary flex-1"
                     placeholder={`Requirement ${index + 1}`}
                   />
                   {formData.requirements.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeRequirement(index)}
-                      className="text-red-600 hover:text-red-700 p-1"
+                      className="text-red-400 hover:text-red-300 p-1 transition-colors"
                     >
                       ✕
                     </button>
@@ -292,14 +312,14 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
           <div className="flex justify-end space-x-4">
             <button
               onClick={resetForm}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="btn btn-outline"
             >
               Cancel
             </button>
             <button
               onClick={editingChallenge ? handleUpdateChallenge : handleCreateChallenge}
               disabled={!formData.title || !formData.category || !formData.description}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="btn btn-primary"
             >
               {editingChallenge ? 'Update Challenge' : 'Create Challenge'}
             </button>
@@ -308,42 +328,42 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
       )}
 
       {/* Challenges List */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+      <div className="card">
         <div className="space-y-4">
           {challenges.map((challenge) => (
-            <div key={challenge.id} className="border border-gray-200 rounded-xl p-4">
+            <div key={challenge.id} className="border border-[rgba(0,255,136,0.1)] rounded-xl p-4 hover:bg-[rgba(0,255,136,0.03)] transition-colors">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-800">{challenge.title}</h3>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      challenge.status === 'active' ? 'bg-green-100 text-green-800' :
-                      challenge.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
+                    <h3 className="text-lg font-semibold text-neutral-200">{challenge.title}</h3>
+                    <span className={`badge ${
+                      challenge.status === 'active' ? 'badge-success' :
+                      challenge.status === 'pending' ? 'badge-warning' :
+                      'badge-info'
                     }`}>
                       {challenge.status}
                     </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      challenge.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
-                      challenge.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                    <span className={`badge ${
+                      challenge.difficulty === 'easy' ? 'badge-success' :
+                      challenge.difficulty === 'medium' ? 'badge-warning' :
+                      'badge-danger'
                     }`}>
                       {challenge.difficulty}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-3">{challenge.description}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                  <p className="text-neutral-400 mb-3">{challenge.description}</p>
+                  <div className="flex items-center space-x-4 text-sm text-neutral-500 mb-2">
                     <span>🏷️ {challenge.category}</span>
                     <span>🏆 {challenge.points} points</span>
                     <span>⏱️ ~{challenge.estimatedTime} min</span>
                   </div>
                   {challenge.requirements && challenge.requirements.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-sm font-medium text-gray-700 mb-1">Requirements:</p>
-                      <ul className="text-sm text-gray-600 space-y-1">
+                      <p className="text-sm font-medium text-neutral-400 mb-1">Requirements:</p>
+                      <ul className="text-sm text-neutral-500 space-y-1">
                         {challenge.requirements.map((req, index) => (
                           <li key={index} className="flex items-start">
-                            <span className="text-green-600 mr-2">•</span>
+                            <span className="text-[#00ff88] mr-2">•</span>
                             {req}
                           </li>
                         ))}
@@ -355,7 +375,7 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
                   <select
                     value={challenge.status}
                     onChange={(e) => handleStatusChange(challenge.id, e.target.value as 'active' | 'pending' | 'inactive')}
-                    className="text-sm border border-gray-300 rounded px-2 py-1"
+                    className="select-primary text-sm !py-1 !px-2"
                   >
                     <option value="active">Active</option>
                     <option value="pending">Pending</option>
@@ -363,14 +383,14 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
                   </select>
                   <button
                     onClick={() => startEdit(challenge)}
-                    className="text-blue-600 hover:text-blue-700 p-1"
+                    className="text-[#00ffff] hover:text-[#67e8f9] p-1 transition-colors"
                     title="Edit"
                   >
                     ✏️
                   </button>
                   <button
                     onClick={() => handleDeleteChallenge(challenge.id)}
-                    className="text-red-600 hover:text-red-700 p-1"
+                    className="text-red-400 hover:text-red-300 p-1 transition-colors"
                     title="Delete"
                   >
                     🗑️
@@ -380,7 +400,11 @@ export default function ChallengeManager({ challenges, onChallengesUpdate }: Cha
             </div>
           ))}
           {challenges.length === 0 && (
-            <p className="text-gray-500 text-center py-8">No challenges found. Create your first challenge!</p>
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🎯</div>
+              <p className="text-xl font-semibold text-neutral-300 mb-2">No Challenges Yet</p>
+              <p className="text-neutral-500">Create your first challenge!</p>
+            </div>
           )}
         </div>
       </div>

@@ -9,6 +9,7 @@ import { ChallengeParticipant } from '../../components/user/ChallengeParticipant
 import Leaderboard from '../../components/user/Leaderboard';
 import MyReports from '../../components/user/MyReports';
 import { Quiz, Challenge } from '../../types';
+import Head from 'next/head';
 
 export default function Dashboard() {
   const { currentUser, userRole } = useAuth();
@@ -91,13 +92,17 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute requiredRole="customer">
+      <Head>
+        <title>Dashboard — EcoQuest</title>
+        <meta name="description" content="Track your eco-journey, complete challenges, and earn rewards." />
+      </Head>
       <div className="min-h-screen bg-primary particle-bg">
-        <div className="space-y-8 p-6">
+        <div className="space-y-8 p-6 pt-24">
           {/* Header */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
             className="relative overflow-hidden glass-neon rounded-3xl shadow-neon-green p-8"
           >
             <div className="absolute inset-0 gradient-mesh opacity-20"></div>
@@ -105,7 +110,7 @@ export default function Dashboard() {
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.6 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
                 className="inline-flex items-center justify-center w-20 h-20 glass-neon rounded-full mb-4 shadow-neon-cyan"
               >
                 <span className="text-5xl animate-pulse">♻️</span>
@@ -113,7 +118,7 @@ export default function Dashboard() {
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
+                transition={{ delay: 0.55, duration: 0.5 }}
                 className="font-clash text-4xl md:text-5xl font-bold text-gradient mb-3 tracking-tight"
               >
                 Welcome back, {userRole?.displayName || 'Champion'}!
@@ -121,7 +126,7 @@ export default function Dashboard() {
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.8 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
                 className="text-neutral-400 text-lg max-w-2xl mx-auto font-satoshi"
               >
                 Continue your e-waste recycling journey. Complete challenges, take quizzes, and earn points to climb the leaderboard!
@@ -131,9 +136,9 @@ export default function Dashboard() {
 
           {/* Stats Grid */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
             className="glass-neon rounded-3xl shadow-neon-purple p-8"
           >
             <div className="flex items-center justify-between">
@@ -142,23 +147,18 @@ export default function Dashboard() {
                 <motion.p 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 1, duration: 0.8, type: "spring" }}
+                  transition={{ delay: 0.4, duration: 0.6, type: "spring" }}
                   className="font-clash text-6xl md:text-7xl font-bold text-gradient"
                 >
-                  {userPoints}
+                  {userPoints.toLocaleString()}
                 </motion.p>
                 <p className="text-neutral-500 text-sm mt-2 font-satoshi">
                   Earn points by completing challenges, quizzes, and reporting e-waste!
                 </p>
               </div>
-              <motion.div 
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="text-8xl opacity-80"
-              >
+              <div className="text-8xl opacity-60" aria-hidden="true">
                 💎
-              </motion.div>
+              </div>
             </div>
           </motion.div>
 
@@ -166,14 +166,14 @@ export default function Dashboard() {
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
             className="glass-neon rounded-3xl shadow-neon-cyan p-8"
           >
             <div className="flex items-center justify-between mb-8">
               <motion.h2 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3, duration: 0.6 }}
+                transition={{ delay: 0.45, duration: 0.5 }}
                 className="font-clash text-3xl font-bold text-neutral-300 flex items-center"
               >
                 <motion.span 
@@ -201,7 +201,7 @@ export default function Dashboard() {
           <motion.div 
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.4, duration: 0.6 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
             className="glass-neon rounded-3xl shadow-neon-green p-8"
           >
             <motion.h2 
@@ -225,7 +225,7 @@ export default function Dashboard() {
                   key={challenge.id} 
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.6 + index * 0.1, duration: 0.6 }}
+                  transition={{ delay: Math.min(0.6 + index * 0.05, 1), duration: 0.4 }}
                   className="card hover-lift group"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -254,7 +254,7 @@ export default function Dashboard() {
                 </motion.div>
               ))}
               {challenges.length === 0 && (
-                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No challenges available at the moment</p>
+                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No challenges available at the moment. Check back soon!</p>
               )}
             </div>
           </motion.div>
@@ -263,7 +263,7 @@ export default function Dashboard() {
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.8, duration: 0.6 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
             className="glass-neon rounded-3xl shadow-neon-purple p-8"
           >
             <motion.h2 
@@ -287,7 +287,7 @@ export default function Dashboard() {
                   key={quiz.id} 
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 2 + index * 0.1, duration: 0.6 }}
+                  transition={{ delay: Math.min(0.7 + index * 0.05, 1.2), duration: 0.4 }}
                   className="card hover-lift group"
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -312,7 +312,7 @@ export default function Dashboard() {
                 </motion.div>
               ))}
               {quizzes.length === 0 && (
-                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No quizzes available at the moment</p>
+                <p className="text-neutral-500 text-center col-span-full py-8 font-satoshi">No quizzes available at the moment. Check back soon!</p>
               )}
             </div>
           </motion.div>
@@ -320,7 +320,7 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.2, duration: 0.6 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
           >
             <Leaderboard />
           </motion.div>

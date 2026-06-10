@@ -1,29 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Head from "next/head";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/router";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import LifeCycleScroll from "../components/LifeCycleScroll";
 
 export default function Home() {
-	const [isVisible, setIsVisible] = useState(false);
+	const mousePositionRef = useRef({ x: 0, y: 0 });
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 	const { currentUser, userRole } = useAuth();
 	const router = useRouter();
+	const rafRef = useRef<number | null>(null);
+
+	const updateMousePosition = useCallback(() => {
+		setMousePosition({ ...mousePositionRef.current });
+		rafRef.current = null;
+	}, []);
 
 	useEffect(() => {
-		const timer = setTimeout(() => setIsVisible(true), 100);
-
 		const handleMouseMove = (e: MouseEvent) => {
-			setMousePosition({ x: e.clientX, y: e.clientY });
+			mousePositionRef.current = { x: e.clientX, y: e.clientY };
+			if (!rafRef.current) {
+				rafRef.current = requestAnimationFrame(updateMousePosition);
+			}
 		};
 
 		window.addEventListener("mousemove", handleMouseMove);
 		return () => {
-			clearTimeout(timer);
 			window.removeEventListener("mousemove", handleMouseMove);
+			if (rafRef.current) cancelAnimationFrame(rafRef.current);
 		};
-	}, []);
+	}, [updateMousePosition]);
 
 	// Redirect authenticated users to appropriate dashboard
 	useEffect(() => {
@@ -50,6 +58,11 @@ export default function Home() {
 
 	return (
 		<main className="min-h-screen bg-primary particle-bg">
+			<Head>
+				<title>EcoQuest — Turn E-Waste Into Environmental Wins</title>
+				<meta name="description" content="Join a global movement turning electronic waste into environmental wins. Gamified challenges, real impact, meaningful rewards." />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+			</Head>
 			{/* Hero Section */}
 			<section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary">
 				{/* Animated Background */}
@@ -143,8 +156,8 @@ export default function Home() {
 									/>
 								</svg>
 							</Link>
-							<Link href="/admin/login" className="btn btn-outline w-full sm:w-auto">
-								Admin Access
+							<Link href="/login" className="btn btn-outline w-full sm:w-auto">
+								Learn More
 							</Link>
 						</motion.div>
 
@@ -192,14 +205,15 @@ export default function Home() {
 				<motion.div 
 					initial={{ opacity: 0, y: 30 }}
 					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
 					transition={{ duration: 0.8 }}
 					className="max-w-4xl mx-auto px-6 text-center"
 				>
-					<h2 className="font-clash text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-neutral-300 mb-6 transition-all duration-1000 leading-tight">
+					<h2 className="font-clash text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-neutral-200 mb-6 leading-tight">
 						Every device has a story.{" "}
-						<motion.span className="font-satoshi font-bold text-gradient">
+						<span className="font-satoshi font-bold text-gradient">
 							Every action
-						</motion.span>{" "}
+						</span>{" "}
 						has an impact.
 					</h2>
 					<p className="text-base md:text-lg lg:text-xl text-neutral-400 leading-relaxed max-w-2xl mx-auto font-satoshi">
@@ -216,6 +230,7 @@ export default function Home() {
 					<motion.div 
 						initial={{ opacity: 0, y: 30 }}
 						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
 						transition={{ duration: 0.8 }}
 						className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16"
 					>
@@ -242,7 +257,7 @@ export default function Home() {
 								</svg>
 							</div>
 							<div className="space-y-3">
-								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-300 leading-tight">
+								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-200 leading-tight">
 									Gamified Progress
 								</h3>
 								<p className="text-neutral-400 leading-relaxed text-base md:text-lg font-satoshi">
@@ -309,6 +324,7 @@ export default function Home() {
 						<motion.div 
 							initial={{ opacity: 0, x: -30 }}
 							whileInView={{ opacity: 1, x: 0 }}
+							viewport={{ once: true }}
 							transition={{ delay: 0.3, duration: 0.6 }}
 							className="space-y-4 lg:space-y-6 group"
 						>
@@ -318,17 +334,18 @@ export default function Home() {
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"
 										strokeWidth={2}
-										d="M12 6.253v13m0-13C10.477 6.936 9 8.519 9 11v7a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.253l-4-4z"
+										d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
 									/>
 								</svg>
 							</div>
 							<div className="space-y-3">
-								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-300 leading-tight">
+								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-200 leading-tight">
 									Expert Education
 								</h3>
 								<p className="text-neutral-400 leading-relaxed text-base md:text-lg font-satoshi">
@@ -341,17 +358,18 @@ export default function Home() {
 									className="inline-flex items-center text-neon-purple font-medium hover:text-neon-pink transition-colors group font-satoshi"
 								>
 									Start learning
-									<svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
 									</svg>
 								</Link>
 							</div>
 						</motion.div>
 
-						{/* Feature 4 */}
+						{/* Feature 4 - Community Rewards */}
 						<motion.div 
 							initial={{ opacity: 0, x: 30 }}
 							whileInView={{ opacity: 1, x: 0 }}
+							viewport={{ once: true }}
 							transition={{ delay: 0.4, duration: 0.6 }}
 							className="space-y-4 lg:space-y-6 group"
 						>
@@ -361,30 +379,31 @@ export default function Home() {
 									fill="none"
 									viewBox="0 0 24 24"
 									stroke="currentColor"
+									aria-hidden="true"
 								>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"
 										strokeWidth={2}
-										d="M12 6.253v13m0-13C10.477 6.936 9 8.519 9 11v7a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6.253l-4-4z"
+										d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
 									/>
 								</svg>
 							</div>
 							<div className="space-y-3">
-								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-300 leading-tight">
-									Expert Education
+								<h3 className="font-clash text-xl md:text-2xl lg:text-3xl text-neutral-200 leading-tight">
+									Community Rewards
 								</h3>
 								<p className="text-neutral-400 leading-relaxed text-base md:text-lg font-satoshi">
-									Learn from sustainability experts through interactive content,
-									quizzes, and practical guides that make complex topics
-									accessible.
+									Redeem your hard-earned points for exclusive rewards,
+									discounts, and real prizes. Your eco-actions have
+									tangible value.
 								</p>
 								<Link
 									href="/login"
 									className="inline-flex items-center text-neon-pink font-medium hover:text-neon-green transition-colors group font-satoshi"
 								>
-									Start learning
-									<svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									Explore rewards
+									<svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
 									</svg>
 								</Link>
@@ -397,6 +416,7 @@ export default function Home() {
 				<motion.div 
 					initial={{ opacity: 0, y: 30 }}
 					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
 					transition={{ duration: 0.8 }}
 					className="max-w-6xl mx-auto px-6"
 				>
@@ -460,6 +480,7 @@ export default function Home() {
 				<motion.div 
 					initial={{ opacity: 0, y: 30 }}
 					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
 					transition={{ duration: 0.8 }}
 					className="relative z-10 max-w-5xl mx-auto text-center px-6"
 				>
@@ -501,10 +522,10 @@ export default function Home() {
 							</svg>
 						</Link>
 						<Link
-							href="/admin/login"
+							href="/login"
 							className="btn btn-outline w-full sm:w-auto"
 						>
-							Admin Access
+							Learn More
 						</Link>
 					</motion.div>
 

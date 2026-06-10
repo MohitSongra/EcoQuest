@@ -22,13 +22,13 @@ export default function MyReports() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[rgba(255,170,0,0.2)] text-[#ffaa00] border border-[rgba(255,170,0,0.3)]';
       case 'collected':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[rgba(0,255,255,0.2)] text-[#00ffff] border border-[rgba(0,255,255,0.3)]';
       case 'processed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-[rgba(0,255,136,0.2)] text-[#00ff88] border border-[rgba(0,255,136,0.3)]';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-black/40 text-neutral-400 border border-[rgba(0,255,136,0.1)]';
     }
   };
 
@@ -60,7 +60,7 @@ export default function MyReports() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+        <div className="spinner-neon"></div>
       </div>
     );
   }
@@ -73,30 +73,30 @@ export default function MyReports() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-[family-name:var(--font-satoshi)]">
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
-          <p className="text-sm opacity-80 mb-1">Total Reports</p>
-          <p className="text-3xl font-bold">{stats.total}</p>
+        <div className="bg-black/80 backdrop-blur-xl border border-[rgba(0,255,255,0.2)] rounded-2xl p-4 shadow-[0_0_15px_rgba(0,255,255,0.1)]">
+          <p className="text-sm text-neutral-400 mb-1">Total Reports</p>
+          <p className="text-3xl font-bold text-[#00ffff] font-[family-name:var(--font-clash-display)]">{stats.total}</p>
         </div>
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 text-white">
-          <p className="text-sm opacity-80 mb-1">Pending</p>
-          <p className="text-3xl font-bold">{stats.pending}</p>
+        <div className="bg-black/80 backdrop-blur-xl border border-[rgba(255,170,0,0.2)] rounded-2xl p-4 shadow-[0_0_15px_rgba(255,170,0,0.1)]">
+          <p className="text-sm text-neutral-400 mb-1">Pending</p>
+          <p className="text-3xl font-bold text-[#ffaa00] font-[family-name:var(--font-clash-display)]">{stats.pending}</p>
         </div>
-        <div className="bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl p-4 text-white">
-          <p className="text-sm opacity-80 mb-1">Collected</p>
-          <p className="text-3xl font-bold">{stats.collected}</p>
+        <div className="bg-black/80 backdrop-blur-xl border border-[rgba(0,255,255,0.2)] rounded-2xl p-4 shadow-[0_0_15px_rgba(0,255,255,0.1)]">
+          <p className="text-sm text-neutral-400 mb-1">Collected</p>
+          <p className="text-3xl font-bold text-[#00ffff] font-[family-name:var(--font-clash-display)]">{stats.collected}</p>
         </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 text-white">
-          <p className="text-sm opacity-80 mb-1">Processed</p>
-          <p className="text-3xl font-bold">{stats.processed}</p>
+        <div className="bg-black/80 backdrop-blur-xl border border-[rgba(0,255,136,0.2)] rounded-2xl p-4 shadow-[0_0_15px_rgba(0,255,136,0.1)]">
+          <p className="text-sm text-neutral-400 mb-1">Processed</p>
+          <p className="text-3xl font-bold text-[#00ff88] font-[family-name:var(--font-clash-display)]">{stats.processed}</p>
         </div>
       </div>
 
       {/* Points Info */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-200">
-        <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
+      <div className="bg-[rgba(0,255,136,0.05)] border border-[rgba(0,255,136,0.15)] rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-neutral-200 mb-3 flex items-center font-[family-name:var(--font-clash-display)]">
           <span className="text-2xl mr-2">💡</span>
           How to Earn Points
         </h3>
@@ -104,15 +104,15 @@ export default function MyReports() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">📦</span>
             <div>
-              <p className="font-semibold text-gray-800">Report Collected</p>
-              <p className="text-gray-600">Earn 50 points when your report is collected</p>
+              <p className="font-semibold text-neutral-200">Report Collected</p>
+              <p className="text-neutral-400">Earn 50 points when your report is collected</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <p className="font-semibold text-gray-800">Report Processed</p>
-              <p className="text-gray-600">Earn 100 points when your report is processed</p>
+              <p className="font-semibold text-neutral-200">Report Processed</p>
+              <p className="text-neutral-400">Earn 100 points when your report is processed</p>
             </div>
           </div>
         </div>
@@ -121,15 +121,15 @@ export default function MyReports() {
       {/* Reports List */}
       <div className="space-y-4">
         {reports.map((report) => (
-          <div key={report.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border-2 border-gray-100">
+          <div key={report.id} className="card hover:border-[rgba(0,255,136,0.3)] hover:shadow-[0_0_20px_rgba(0,255,136,0.1)] transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="text-4xl">{getStatusIcon(report.status)}</div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">
+                  <h3 className="text-lg font-bold text-neutral-200 font-[family-name:var(--font-clash-display)]">
                     {report.brand} {report.model || report.deviceType}
                   </h3>
-                  <p className="text-sm text-gray-600">{report.deviceType}</p>
+                  <p className="text-sm text-neutral-400">{report.deviceType}</p>
                 </div>
               </div>
               <span className={`px-4 py-2 text-xs font-bold rounded-full ${getStatusBadge(report.status)}`}>
@@ -139,32 +139,32 @@ export default function MyReports() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-500 mb-1">Condition</p>
-                <p className="font-semibold text-gray-800 capitalize">{report.condition}</p>
+                <p className="text-neutral-500 mb-1">Condition</p>
+                <p className="font-semibold text-neutral-300 capitalize">{report.condition}</p>
               </div>
               <div>
-                <p className="text-gray-500 mb-1">Location</p>
-                <p className="font-semibold text-gray-800">{report.location}</p>
+                <p className="text-neutral-500 mb-1">Location</p>
+                <p className="font-semibold text-neutral-300">{report.location}</p>
               </div>
               <div>
-                <p className="text-gray-500 mb-1">Reported On</p>
-                <p className="font-semibold text-gray-800">{formatDate(report.reportedAt)}</p>
+                <p className="text-neutral-500 mb-1">Reported On</p>
+                <p className="font-semibold text-neutral-300">{formatDate(report.reportedAt)}</p>
               </div>
             </div>
 
             {report.description && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-600">{report.description}</p>
+              <div className="mt-4 pt-4 border-t border-[rgba(0,255,136,0.1)]">
+                <p className="text-sm text-neutral-400">{report.description}</p>
               </div>
             )}
           </div>
         ))}
 
         {reports.length === 0 && (
-          <div className="text-center py-12 bg-white/80 rounded-3xl">
+          <div className="text-center py-12 card">
             <div className="text-6xl mb-4">📱</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Reports Yet</h3>
-            <p className="text-gray-600">Start reporting e-waste devices to earn points!</p>
+            <h3 className="text-xl font-semibold text-neutral-300 mb-2 font-[family-name:var(--font-clash-display)]">No Reports Yet</h3>
+            <p className="text-neutral-500">Start reporting e-waste devices to earn points!</p>
           </div>
         )}
       </div>

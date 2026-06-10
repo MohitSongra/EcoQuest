@@ -24,20 +24,20 @@ export default function SampleDataSeeder() {
   };
 
   return (
-    <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-      <h4 className="font-medium text-blue-800 mb-2">🚀 Quick Start</h4>
-      <p className="text-sm text-blue-700 mb-3">
+    <div className="card !bg-[rgba(0,255,136,0.05)] !border-[rgba(0,255,136,0.2)]">
+      <h4 className="font-medium text-[#00ff88] mb-2 font-[family-name:var(--font-clash-display)]">🚀 Quick Start</h4>
+      <p className="text-sm text-neutral-400 mb-3">
         Get started quickly by adding sample quizzes and challenges to test the system.
       </p>
       <button
         onClick={seedSampleData}
         disabled={isSeeding}
-        className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        className="btn btn-primary"
       >
         {isSeeding ? 'Adding Sample Data...' : 'Add Sample Data'}
       </button>
       {seedStatus && (
-        <p className="mt-2 text-sm text-blue-700">{seedStatus}</p>
+        <p className="mt-2 text-sm text-[#00ff88]">{seedStatus}</p>
       )}
     </div>
   );
