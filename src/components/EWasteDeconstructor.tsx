@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -34,9 +34,55 @@ export default function EWasteDeconstructor() {
   const [isExploded, setIsExploded] = useState(false);
   const [hoveredPart, setHoveredPart] = useState<number | null>(null);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const reqRef = useRef<number | null>(null);
+
   const device = devices[activeDevice];
   // Determine which part info to show.
   const displayPart = hoveredPart !== null ? device.parts[hoveredPart] : null;
+
+  const handleMouseEnter = () => {
+    setIsExploded(true);
+    if (activeDevice === 'smartphone' && videoRef.current) {
+      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+      videoRef.current.playbackRate = 1;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // Auto-play was prevented
+          console.log("Video playback prevented:", error);
+        });
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsExploded(false);
+    setHoveredPart(null);
+    if (activeDevice === 'smartphone' && videoRef.current) {
+      videoRef.current.pause();
+      
+      const stepReverse = () => {
+        if (!videoRef.current) return;
+        if (videoRef.current.currentTime <= 0.05) {
+          videoRef.current.currentTime = 0;
+          return;
+        }
+        videoRef.current.currentTime -= 0.05; // Adjust scrub speed backwards
+        reqRef.current = requestAnimationFrame(stepReverse);
+      };
+      
+      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+      reqRef.current = requestAnimationFrame(stepReverse);
+    }
+  };
+
+  // Cleanup requestAnimationFrame
+  useEffect(() => {
+    return () => {
+      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+    };
+  }, []);
 
   return (
     <div className="w-full max-w-[1400px] mx-auto flex flex-col items-center py-12 px-4 sm:px-6">
@@ -68,100 +114,136 @@ export default function EWasteDeconstructor() {
         {/* Ambient background glow */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(0,255,136,0.03)_0%,transparent_50%)] pointer-events-none" />
 
-        {/* 3D Visualization Column */}
+        {/* Visualization Column */}
         <div 
-          className="lg:col-span-7 relative h-[450px] lg:h-full w-full flex items-center justify-center perspective-[2000px] cursor-crosshair group overflow-hidden"
-          onMouseEnter={() => setIsExploded(true)}
-          onMouseLeave={() => { setIsExploded(false); setHoveredPart(null); }}
+          className="lg:col-span-7 relative h-[450px] lg:h-[600px] w-full flex items-center justify-center perspective-[2000px] group overflow-hidden"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          {/* Isometric Wrapper */}
-          <motion.div
-            className="relative flex items-center justify-center transform-style-3d"
-            animate={{ 
-              rotateX: isExploded ? 60 : 0, 
-              rotateZ: isExploded ? -35 : 0,
-              scale: isExploded ? (activeDevice === 'laptop' ? 0.8 : 0.9) : (activeDevice === 'laptop' ? 0.9 : 1),
-              y: isExploded ? 20 : 0
-            }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            style={{ 
-              width: device.width, 
-              height: device.height,
-              transformStyle: "preserve-3d"
-            }}
-          >
-            {/* The Layers */}
-            {[...device.parts].reverse().map((part) => {
-              const index = device.parts.indexOf(part);
-              // Base z-offsets for the exploded view
-              // Layer 2 (Board) is bottom, Layer 1 (Battery) is middle, Layer 0 (Screen) is top
-              const isBase = index === 2;
-              const isMiddle = index === 1;
-              const isTop = index === 0;
+          {activeDevice === 'smartphone' ? (
+            // SMARTPHONE: Video Mode
+            <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+              <video 
+                ref={videoRef}
+                src="/videos/smartphone_exploded.mp4"
+                className="absolute inset-0 w-full h-full object-cover sm:object-contain pointer-events-none mix-blend-screen drop-shadow-2xl opacity-90"
+                muted
+                playsInline
+                preload="auto"
+              />
               
-              let zOffset = 0;
-              if (isExploded) {
-                if (isTop) zOffset = 220;
-                if (isMiddle) zOffset = 110;
-                if (isBase) zOffset = 0;
-              }
+              {/* Invisible Hotspots for Information Trigger */}
+              <div className={`absolute inset-0 transition-opacity duration-300 ${isExploded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                {/* Top: Screen (index 0) */}
+                <div 
+                  className="absolute top-[15%] left-[20%] right-[20%] h-[20%] z-30 cursor-crosshair" 
+                  onMouseEnter={() => setHoveredPart(0)} 
+                />
+                {/* Middle: Battery (index 1) */}
+                <div 
+                  className="absolute top-[40%] left-[20%] right-[20%] h-[20%] z-20 cursor-crosshair" 
+                  onMouseEnter={() => setHoveredPart(1)} 
+                />
+                {/* Bottom: Board (index 2) */}
+                <div 
+                  className="absolute top-[65%] left-[20%] right-[20%] h-[20%] z-10 cursor-crosshair" 
+                  onMouseEnter={() => setHoveredPart(2)} 
+                />
+              </div>
 
-              // Pop effect if this specific part is hovered
-              const isHovered = hoveredPart === index;
-              const isDimmed = hoveredPart !== null && !isHovered;
-              
-              if (isHovered && isExploded) {
-                zOffset += 40; // Pop up slightly more
-              }
-
-              return (
-                <motion.div
-                  key={part.id}
-                  className="absolute inset-0 flex items-center justify-center transform-style-3d"
-                  animate={{ 
-                    z: zOffset,
-                    opacity: isDimmed ? 0.4 : 1,
-                    scale: isHovered ? 1.05 : 1
-                  }}
-                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  onMouseEnter={() => isExploded && setHoveredPart(index)}
-                  style={{ transformStyle: "preserve-3d" }}
-                >
-                  {/* Glowing backdrop layer for parts to give them physical presence */}
-                  <motion.div 
-                    className="absolute inset-0 bg-black/40 rounded-[2rem] border border-white/5 pointer-events-none"
-                    animate={{ opacity: isExploded ? 1 : 0 }}
-                  />
-
-                  {/* Glowing border on hover */}
-                  <div className={`absolute inset-0 rounded-[2rem] transition-opacity duration-300 pointer-events-none ${isHovered ? 'ring-2 ring-white/30 bg-white/5' : ''}`} />
-                  
-                  {/* The Image */}
-                  <div className={`relative w-full h-full mix-blend-screen transition-all duration-300 ${isHovered ? 'drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]' : 'drop-shadow-2xl'}`}>
-                    <Image 
-                      src={part.img} 
-                      alt={part.name} 
-                      fill 
-                      className={`object-contain rounded-[2rem] p-4 ${isTop && activeDevice === 'laptop' ? 'p-0' : ''}`} 
-                      priority
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
-            
-            {/* Floating Instructional Text (Only shows when not exploded) */}
-            <motion.div 
-              className="absolute -bottom-24 left-0 right-0 text-center pointer-events-none"
-              animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? 20 : 0 }}
-              transition={{ duration: 0.4 }}
+              <motion.div 
+                className="absolute bottom-8 left-0 right-0 text-center pointer-events-none"
+                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? 20 : 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                 <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-2 border border-white/10 text-neutral-400 text-xs sm:text-sm font-semibold tracking-widest uppercase shadow-2xl">
+                   <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
+                   Hover to deconstruct
+                 </span>
+              </motion.div>
+            </div>
+          ) : (
+            // LAPTOP: Isometric CSS 3D Mode
+            <motion.div
+              className="relative flex items-center justify-center transform-style-3d cursor-crosshair"
+              animate={{ 
+                rotateX: isExploded ? 60 : 0, 
+                rotateZ: isExploded ? -35 : 0,
+                scale: isExploded ? 0.8 : 0.9,
+                y: isExploded ? 20 : 0
+              }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              style={{ 
+                width: device.width, 
+                height: device.height,
+                transformStyle: "preserve-3d"
+              }}
             >
-               <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-2 border border-white/10 text-neutral-400 text-xs sm:text-sm font-semibold tracking-widest uppercase">
-                 <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
-                 Hover to deconstruct
-               </span>
+              {/* The Layers */}
+              {[...device.parts].reverse().map((part) => {
+                const index = device.parts.indexOf(part);
+                const isBase = index === 2;
+                const isMiddle = index === 1;
+                const isTop = index === 0;
+                
+                let zOffset = 0;
+                if (isExploded) {
+                  if (isTop) zOffset = 220;
+                  if (isMiddle) zOffset = 110;
+                  if (isBase) zOffset = 0;
+                }
+
+                const isHovered = hoveredPart === index;
+                const isDimmed = hoveredPart !== null && !isHovered;
+                
+                if (isHovered && isExploded) {
+                  zOffset += 40; // Pop up slightly more
+                }
+
+                return (
+                  <motion.div
+                    key={part.id}
+                    className="absolute inset-0 flex items-center justify-center transform-style-3d"
+                    animate={{ 
+                      z: zOffset,
+                      opacity: isDimmed ? 0.4 : 1,
+                      scale: isHovered ? 1.05 : 1
+                    }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    onMouseEnter={() => isExploded && setHoveredPart(index)}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
+                    <motion.div 
+                      className="absolute inset-0 bg-black/40 rounded-[2rem] border border-white/5 pointer-events-none"
+                      animate={{ opacity: isExploded ? 1 : 0 }}
+                    />
+                    <div className={`absolute inset-0 rounded-[2rem] transition-opacity duration-300 pointer-events-none ${isHovered ? 'ring-2 ring-white/30 bg-white/5' : ''}`} />
+                    
+                    <div className={`relative w-full h-full mix-blend-screen transition-all duration-300 ${isHovered ? 'drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]' : 'drop-shadow-2xl'}`}>
+                      <Image 
+                        src={part.img} 
+                        alt={part.name} 
+                        fill 
+                        className={`object-contain rounded-[2rem] ${isTop ? 'p-0' : 'p-4'}`} 
+                        priority
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+              
+              <motion.div 
+                className="absolute -bottom-24 left-0 right-0 text-center pointer-events-none"
+                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? 20 : 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                 <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-2 border border-white/10 text-neutral-400 text-xs sm:text-sm font-semibold tracking-widest uppercase">
+                   <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
+                   Hover to deconstruct
+                 </span>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          )}
         </div>
 
         {/* Information Panel Column */}
