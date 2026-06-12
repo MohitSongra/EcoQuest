@@ -10,7 +10,7 @@ const devices = {
     width: 240,
     height: 420,
     parts: [
-      { id: 'screen', name: 'Glass Display Panel', points: '+50 pts', impact: 'Saves 2kg of CO2 emissions from glass manufacturing.', color: 'from-blue-500/20 to-blue-500/5', iconColor: 'text-blue-400', img: '/images/deconstructor/smartphone_screen.png' },
+      { id: 'screen', name: 'Glass Display Panel', points: '+50 pts', impact: 'Saves 2kg of CO2 emissions from glass manufacturing.', color: 'from-blue-500/20 to-blue-500/5', iconColor: 'text-blue-400', img: '/images/deconstructor/smartphone_mockup.webp' },
       { id: 'battery', name: 'Lithium-Ion Battery', points: '+120 pts', impact: 'Prevents toxic leakage into soil and recovers cobalt.', color: 'from-emerald-500/20 to-emerald-500/5', iconColor: 'text-emerald-400', img: '/images/deconstructor/smartphone_battery.png' },
       { id: 'board', name: 'Logic Board', points: '+200 pts', impact: 'Recycles rare earth metals like gold, silver, and palladium.', color: 'from-amber-500/20 to-amber-500/5', iconColor: 'text-amber-400', img: '/images/deconstructor/smartphone_board.png' }
     ]
@@ -20,7 +20,7 @@ const devices = {
     width: 480,
     height: 280,
     parts: [
-      { id: 'screen', name: 'LCD/LED Display', points: '+150 pts', impact: 'Saves 8kg CO2 and recovers valuable indium.', color: 'from-blue-500/20 to-blue-500/5', iconColor: 'text-blue-400', img: '/images/deconstructor/laptop_screen.png' },
+      { id: 'screen', name: 'LCD/LED Display', points: '+150 pts', impact: 'Saves 8kg CO2 and recovers valuable indium.', color: 'from-blue-500/20 to-blue-500/5', iconColor: 'text-blue-400', img: '/images/deconstructor/laptop_mockup.jpg' },
       { id: 'battery', name: 'Multi-cell Battery', points: '+300 pts', impact: 'Prevents severe heavy metal pollution and fire hazards.', color: 'from-emerald-500/20 to-emerald-500/5', iconColor: 'text-emerald-400', img: '/images/deconstructor/laptop_battery.png' },
       { id: 'board', name: 'Main Motherboard', points: '+400 pts', impact: 'Recycles copper cooling pipes and precious processor metals.', color: 'from-amber-500/20 to-amber-500/5', iconColor: 'text-amber-400', img: '/images/deconstructor/laptop_board.png' }
     ]
@@ -91,7 +91,8 @@ export default function EWasteDeconstructor() {
             }}
           >
             {/* The Layers */}
-            {device.parts.map((part, index) => {
+            {[...device.parts].reverse().map((part) => {
+              const index = device.parts.indexOf(part);
               // Base z-offsets for the exploded view
               // Layer 2 (Board) is bottom, Layer 1 (Battery) is middle, Layer 0 (Screen) is top
               const isBase = index === 2;
