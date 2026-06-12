@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 			</Head>
 
 			{/* Skip to content for accessibility */}
-			<a href="#main-content" className="skip-to-content">
+			<a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-white focus:text-black focus:z-50">
 				Skip to content
 			</a>
 
