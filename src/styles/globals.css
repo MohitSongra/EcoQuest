@@ -72,11 +72,11 @@ html.lenis body {
 /* Typography Utilities (Framer/Apple hybrid) */
 @layer utilities {
   .display-hero {
-    @apply font-medium tracking-tighter-3xl leading-[0.9];
+    @apply text-5xl sm:text-7xl md:text-[6rem] lg:text-[8rem] font-medium tracking-tighter-3xl leading-[0.9];
   }
   
   .display-section {
-    @apply font-medium tracking-tighter-2xl leading-[1.0];
+    @apply text-4xl sm:text-5xl md:text-6xl font-medium tracking-tighter-2xl leading-[1.0];
   }
 
   .body-editorial {

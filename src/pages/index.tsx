@@ -3,12 +3,19 @@ import Link from "next/link";
 import Head from "next/head";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/router";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import LifeCycleScroll from "../components/LifeCycleScroll";
 
 export default function Home() {
   const { currentUser, userRole } = useAuth();
   const router = useRouter();
+  
+  // Parallax Scroll Hooks for Hero
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, -150]);
+  const y2 = useTransform(scrollY, [0, 500], [0, -250]);
+  const y3 = useTransform(scrollY, [0, 500], [0, -80]);
+  const opacityFade = useTransform(scrollY, [0, 300], [1, 0]);
 
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
@@ -40,12 +47,71 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative min-h-[100svh] flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
-        {/* Subtle Ambient Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[500px] opacity-30 pointer-events-none">
-          <div className="absolute inset-0 bg-spotlight-emerald blur-3xl mix-blend-screen" />
-        </div>
+        {/* Subtle Ambient Glow that fades on scroll */}
+        <motion.div 
+          style={{ opacity: opacityFade }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[500px] pointer-events-none"
+        >
+          <div className="absolute inset-0 bg-spotlight-emerald blur-3xl mix-blend-screen opacity-30" />
+        </motion.div>
 
-        <div className="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center">
+        {/* Floating UI Widget 1 (Top Left) */}
+        <motion.div
+          style={{ y: y1, opacity: opacityFade }}
+          className="hidden lg:flex absolute top-[25%] left-[10%] z-20 flex-col items-center p-5 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="text-xs text-ink-muted uppercase tracking-wider mb-1">Carbon Offset</div>
+          <div className="text-3xl font-medium text-accent">1,204 <span className="text-lg text-ink-muted">kg</span></div>
+        </motion.div>
+
+        {/* Floating UI Widget 2 (Bottom Right) */}
+        <motion.div
+          style={{ y: y2, opacity: opacityFade }}
+          className="hidden lg:flex absolute bottom-[30%] right-[10%] z-20 items-center gap-4 p-4 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/5">
+            <span className="text-xl">💻</span>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-white">MacBook Pro 2019</div>
+            <div className="text-xs text-accent">Recycled Successfully</div>
+          </div>
+        </motion.div>
+
+        {/* Floating UI Widget 3 (Top Right) */}
+        <motion.div
+          style={{ y: y3, opacity: opacityFade }}
+          className="hidden md:flex absolute top-[30%] right-[20%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.9, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+          <span className="text-xs font-medium text-white">Live Impact Tracking</span>
+        </motion.div>
+        
+        {/* Floating UI Widget 4 (Bottom Left) */}
+        <motion.div
+          style={{ y: y2, opacity: opacityFade }}
+          className="hidden md:flex absolute bottom-[25%] left-[20%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="text-xs font-medium text-white">🏆 +500 pts earned</span>
+        </motion.div>
+
+        {/* Main Hero Content (Parallaxes slightly slower) */}
+        <motion.div 
+          style={{ y: y3, opacity: opacityFade }}
+          className="relative z-10 text-center max-w-5xl mx-auto flex flex-col items-center"
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -60,7 +126,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="display-hero text-white mb-6 max-w-4xl"
+            className="display-hero text-white mb-6 max-w-5xl drop-shadow-2xl"
           >
             The end of e-waste starts here.
           </motion.h1>
@@ -88,13 +154,14 @@ export default function Home() {
               Explore Platform
             </Link>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Scroll Indicator */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 1 }}
+          style={{ opacity: opacityFade }}
           className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         >
           <span className="text-xs text-ink-muted uppercase tracking-widest font-medium">Scroll</span>
