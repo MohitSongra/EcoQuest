@@ -140,20 +140,6 @@ export default function Home() {
             Turn forgotten devices into global environmental impact. 
             Join the platform that gamifies sustainability and rewards real-world action.
           </motion.p>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
-          >
-            <Link href="/login" className="btn-primary w-full sm:w-auto px-8">
-              Get Started
-            </Link>
-            <Link href="#how-it-works" className="btn-secondary w-full sm:w-auto px-8">
-              Explore Platform
-            </Link>
-          </motion.div>
         </motion.div>
 
         {/* Scroll Indicator */}
