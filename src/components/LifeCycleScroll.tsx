@@ -57,12 +57,12 @@ function TextOverlayItem({
       className="absolute inset-0 flex items-center justify-center pointer-events-none"
       style={{ opacity }}
     >
-      <motion.div style={{ y }} className="text-center px-6 max-w-4xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light text-white tracking-tight mb-8 font-[family-name:var(--font-clash-display)] drop-shadow-[0_2px_20px_rgba(0,0,0,0.8)]">
+      <motion.div style={{ y }} className="text-center px-6 max-w-5xl mx-auto flex flex-col items-center">
+        <h2 className="display-section text-white mb-10 drop-shadow-2xl">
           {overlay.text.split(' ').map((word, i, arr) => (
             <span
               key={i}
-              className={i === arr.length - 1 ? 'text-[#00ff88] font-bold' : ''}
+              className={i === arr.length - 1 ? 'text-accent' : ''}
             >
               {word}{' '}
             </span>
@@ -73,12 +73,9 @@ function TextOverlayItem({
           <motion.div className="pointer-events-auto" style={{ opacity }}>
             <Link
               href="/login"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-[#00ff88] to-[#00ffff] text-black font-semibold rounded-full hover:from-[#00ffff] hover:to-[#00ff88] transition-all duration-300 hover:scale-105 tracking-wide font-[family-name:var(--font-satoshi)] shadow-[0_0_20px_rgba(0,255,136,0.5)] hover:shadow-[0_0_30px_rgba(0,255,255,0.5)]"
+              className="btn-primary"
             >
-              Join Now
-              <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              Start the journey
             </Link>
           </motion.div>
         )}
@@ -188,7 +185,7 @@ export default function LifeCycleScroll() {
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = '#090909';
       ctx.fillRect(0, 0, w, h);
 
       const img = images[frame];
@@ -229,20 +226,14 @@ export default function LifeCycleScroll() {
    *       </div>
    *     </div>
    *   </containerRef>
-   *
-   * The loading overlay sits INSIDE the sticky container so the scroll runway
-   * maintains its full height throughout. When the user scrolls during loading
-   * the sticky container stays pinned but shows the loading UI. Once images
-   * load, the overlay fades away and the canvas starts rendering.
    */
   return (
     <div
       ref={containerRef}
-      className="relative bg-black"
+      className="relative bg-canvas"
       aria-label="E-waste lifecycle animation"
     >
       <div style={{ height: `${SCROLL_HEIGHT_VH}vh` }} className="relative">
-        {/* Sticky viewport — pinned to screen while scrolling through runway */}
         <div className="sticky top-0 h-screen w-full overflow-hidden">
           {/* Canvas */}
           <canvas
@@ -253,7 +244,7 @@ export default function LifeCycleScroll() {
           />
 
           {/* Dark vignette for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-canvas via-transparent to-canvas/30 pointer-events-none" />
 
           {/* Text overlays — driven by scroll progress */}
           {textOverlays.map((overlay, index) => (
@@ -264,23 +255,20 @@ export default function LifeCycleScroll() {
             />
           ))}
 
-          {/* Loading overlay — sits on top of everything, fades out */}
+          {/* Loading overlay */}
           {isLoading && (
-            <div className="absolute inset-0 z-30 bg-black flex items-center justify-center">
-              <div className="text-center">
-                <div className="spinner-neon mx-auto mb-6" />
-                <p className="text-[#00ff88] text-lg font-light tracking-wide font-[family-name:var(--font-clash-display)]">
+            <div className="absolute inset-0 z-30 bg-canvas flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-accent rounded-full animate-spin mb-6" />
+                <p className="text-white text-lg font-medium tracking-tight">
                   Loading Experience...
                 </p>
-                <div className="w-48 h-1 bg-[rgba(0,255,136,0.1)] rounded-full mx-auto mt-4 overflow-hidden">
+                <div className="w-48 h-1 bg-white/10 rounded-full mt-4 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#00ff88] to-[#00ffff] rounded-full transition-all duration-300"
+                    className="h-full bg-accent rounded-full transition-all duration-300"
                     style={{ width: `${loadingProgress}%` }}
                   />
                 </div>
-                <p className="text-neutral-500 text-sm mt-2 font-[family-name:var(--font-satoshi)]">
-                  {loadingProgress}%
-                </p>
               </div>
             </div>
           )}

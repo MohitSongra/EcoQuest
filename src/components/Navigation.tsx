@@ -62,152 +62,158 @@ const Navigation = () => {
   };
 
   const navItems = isAdmin 
-    ? [{ href: '/admin', label: 'Admin Panel', icon: '⚙️', show: true }]
+    ? [{ href: '/admin', label: 'Admin Panel', show: true }]
     : [
-        { href: '/dashboard', label: 'Dashboard', icon: '📊', show: !!currentUser },
-        { href: '/rewards', label: 'Rewards', icon: '🎁', show: !!currentUser }
+        { href: '/dashboard', label: 'Dashboard', show: !!currentUser },
+        { href: '/rewards', label: 'Rewards', show: !!currentUser }
       ].filter(item => item.show);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-neon-green/20 backdrop-blur-md ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
-    } ${
-      isScrolled ? 'glass-neon shadow-[0_4px_30px_rgba(0,0,0,0.3)]' : 'bg-black/50'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 glass-neon rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-neon-green">
-              <span className="text-lg font-bold text-neon-green animate-pulse">♻</span>
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-clash text-xl font-bold text-gradient transition-colors duration-300">
+      <div className={`transition-all duration-300 ${
+        isScrolled ? 'bg-canvas/80 backdrop-blur-md border-b border-white/5' : 'bg-transparent'
+      }`}>
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2 group">
+              <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <span className="text-sm font-bold tracking-tighter">EQ</span>
+              </div>
+              <span className="font-medium tracking-tight text-white transition-opacity duration-300">
                 EcoQuest
               </span>
-              <p className="text-xs text-neutral-400 font-satoshi">
-                Transform E-Waste
-              </p>
-            </div>
-          </Link>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link 
-                key={item.href}
-                href={item.href} 
-                className={`group flex items-center space-x-2 px-6 py-2 rounded-xl font-semibold transition-all duration-300 ${
-                  isActive(item.href)
-                    ? 'glass-neon text-neon-green shadow-neon-green transform scale-105'
-                    : 'text-neutral-300 hover:text-neon-green hover:bg-neon-green/10'
-                }`}
-              >
-                <span className="text-xl group-hover:scale-110 transition-transform duration-300">
-                  {item.icon}
-                </span>
-                <span className="font-satoshi">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
-            {currentUser ? (
-              <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-neutral-400 font-satoshi">
-                  Welcome, {userRole?.displayName || userRole?.email}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-6 py-2 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 font-satoshi"
-                >
-                  Logout
-                </button>
-              </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <Link
-                    href="/login"
-                    className="btn btn-primary font-satoshi"
-                  >
-                    Login
-                  </Link>
-                </div>
-              )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg transition-colors duration-300 text-neutral-300 hover:text-neon-green hover:bg-neon-green/10"
-            aria-label="Toggle mobile menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            <div className="w-6 h-6 flex flex-col justify-center items-center">
-              <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${
-                isMobileMenuOpen ? 'rotate-45 translate-y-1' : '-translate-y-1'
-              }`} />
-              <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${
-                isMobileMenuOpen ? 'opacity-0' : 'opacity-100'
-              }`} />
-              <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${
-                isMobileMenuOpen ? '-rotate-45 -translate-y-1' : 'translate-y-1'
-              }`} />
-            </div>
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        <div className={`md:hidden transition-all duration-300 overflow-hidden ${
-          isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-          <div className="py-4 space-y-2 glass-neon border-t border-neon-green/20">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
-                  isActive(item.href)
-                    ? 'glass-neon text-neon-green shadow-neon-green'
-                    : 'text-neutral-300 hover:text-neon-green hover:bg-neon-green/10'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="font-satoshi">{item.label}</span>
-              </Link>
-            ))}
+            </Link>
             
-            {/* Mobile Auth Buttons */}
-            <div className="pt-4 border-t border-neon-green/20">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.href}
+                  href={item.href} 
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'bg-surface-2 text-white'
+                      : 'text-ink-muted hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="hidden md:flex items-center space-x-4">
               {currentUser ? (
-                <div className="space-y-2">
-                  <div className="px-4 py-2 text-sm text-neutral-400 font-satoshi">
-                    Welcome, {userRole?.displayName || userRole?.email}
-                  </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-ink-muted">
+                    {userRole?.displayName || userRole?.email}
+                  </span>
                   <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full text-left bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-medium transition-colors border border-red-500/30 font-satoshi"
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-ink-muted hover:text-white transition-colors"
                   >
                     Logout
                   </button>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <Link
-                    href="/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block w-full text-left btn btn-primary font-satoshi"
-                  >
-                    Login
-                  </Link>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <Link
+                      href="/login"
+                      className="text-sm font-medium text-ink hover:text-white transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="btn-primary"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-ink-muted hover:text-white"
+              aria-label="Toggle mobile menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <div className="w-5 h-5 flex flex-col justify-center items-center gap-1.5">
+                <span className={`block w-full h-[1.5px] bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? 'rotate-45 translate-y-[7.5px]' : ''
+                }`} />
+                <span className={`block w-full h-[1.5px] bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? 'opacity-0' : ''
+                }`} />
+                <span className={`block w-full h-[1.5px] bg-current transition-all duration-300 ${
+                  isMobileMenuOpen ? '-rotate-45 -translate-y-[7.5px]' : ''
+                }`} />
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`md:hidden absolute top-full left-0 right-0 transition-all duration-300 overflow-hidden bg-surface-1 border-b border-white/5 backdrop-blur-xl ${
+        isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="px-6 py-6 space-y-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block text-base font-medium transition-colors duration-200 ${
+                isActive(item.href)
+                  ? 'text-white'
+                  : 'text-ink-muted hover:text-white'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+          
+          {/* Mobile Auth Buttons */}
+          <div className="pt-6 mt-6 border-t border-white/5">
+            {currentUser ? (
+              <div className="space-y-4">
+                <div className="text-sm text-ink-muted">
+                  {userRole?.displayName || userRole?.email}
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-4">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full text-center text-sm font-medium text-ink hover:text-white transition-colors py-3 rounded-full border border-white/10"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full text-center btn-primary"
+                >
+                  Get Started
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
