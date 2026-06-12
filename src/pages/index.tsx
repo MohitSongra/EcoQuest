@@ -58,7 +58,7 @@ export default function Home() {
         {/* Floating UI Widget 1 (Top Left) */}
         <motion.div
           style={{ y: y1, opacity: opacityFade }}
-          className="hidden lg:flex absolute top-[25%] left-[10%] z-20 flex-col items-center p-5 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
+          className="hidden lg:flex absolute top-[20%] left-[5%] xl:left-[10%] z-20 flex-col items-center p-5 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -70,7 +70,7 @@ export default function Home() {
         {/* Floating UI Widget 2 (Bottom Right) */}
         <motion.div
           style={{ y: y2, opacity: opacityFade }}
-          className="hidden lg:flex absolute bottom-[30%] right-[10%] z-20 items-center gap-4 p-4 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
+          className="hidden lg:flex absolute bottom-[15%] right-[5%] xl:right-[10%] z-20 items-center gap-4 p-4 bg-surface-1/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-floating"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -87,7 +87,7 @@ export default function Home() {
         {/* Floating UI Widget 3 (Top Right) */}
         <motion.div
           style={{ y: y3, opacity: opacityFade }}
-          className="hidden md:flex absolute top-[30%] right-[20%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
+          className="hidden md:flex absolute top-[20%] right-[5%] xl:right-[15%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.9, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -99,7 +99,7 @@ export default function Home() {
         {/* Floating UI Widget 4 (Bottom Left) */}
         <motion.div
           style={{ y: y2, opacity: opacityFade }}
-          className="hidden md:flex absolute bottom-[25%] left-[20%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
+          className="hidden md:flex absolute bottom-[20%] left-[5%] xl:left-[15%] z-0 items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-lg border border-white/5 rounded-full"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -128,7 +128,7 @@ export default function Home() {
             transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="display-hero text-white mb-6 max-w-5xl drop-shadow-2xl"
           >
-            The end of e-waste starts here.
+            The end of <span className="text-transparent bg-clip-text bg-[linear-gradient(to_right,theme(colors.emerald.400),theme(colors.teal.300))] italic pr-2">e-waste</span> starts here.
           </motion.h1>
 
           <motion.p 
