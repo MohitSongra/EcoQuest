@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import { motion, useScroll, useTransform } from "framer-motion";
 import LifeCycleScroll from "../components/LifeCycleScroll";
 import EWasteDeconstructor from "../components/EWasteDeconstructor";
-import InteractiveRewardCards from "../components/InteractiveRewardCards";
+import RewardMarquee from "../components/RewardMarquee";
 
 export default function Home() {
   const { currentUser, userRole } = useAuth();
@@ -207,8 +207,8 @@ export default function Home() {
               </Link>
             </div>
             
-            {/* Interactive 3D Reward Cards */}
-            <InteractiveRewardCards />
+            {/* Infinite Scrolling Marquee */}
+            <RewardMarquee />
           </motion.div>
         </div>
       </section>
