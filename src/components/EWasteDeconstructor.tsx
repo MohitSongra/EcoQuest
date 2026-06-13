@@ -123,8 +123,8 @@ export default function EWasteDeconstructor() {
         >
           {activeDevice === 'smartphone' ? (
             // SMARTPHONE: Video Mode
-            <div className="relative w-full h-full flex items-center justify-center scale-[1.3] md:scale-[1.4]"
-                 style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)' }}>
+            <div className="relative w-full h-full flex items-center justify-center scale-[1.1] md:scale-[1.15]"
+                 style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, black 45%, transparent 65%)', maskImage: 'radial-gradient(ellipse at center, black 45%, transparent 65%)' }}>
               <video 
                 ref={videoRef}
                 src="/videos/smartphone_exploded.mp4"
@@ -154,12 +154,12 @@ export default function EWasteDeconstructor() {
               </div>
 
               <motion.div 
-                className="absolute bottom-8 left-0 right-0 text-center pointer-events-none"
-                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? 20 : 0 }}
+                className="absolute top-8 left-0 right-0 text-center pointer-events-none z-50"
+                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? -10 : 0 }}
                 transition={{ duration: 0.4 }}
               >
-                 <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-2 border border-white/10 text-neutral-400 text-xs sm:text-sm font-semibold tracking-widest uppercase shadow-2xl">
-                   <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
+                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white/90 text-[10px] font-bold tracking-[0.2em] uppercase shadow-2xl">
+                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_8px_#00ff88]" />
                    Hover to deconstruct
                  </span>
               </motion.div>
@@ -235,12 +235,12 @@ export default function EWasteDeconstructor() {
               })}
               
               <motion.div 
-                className="absolute -bottom-24 left-0 right-0 text-center pointer-events-none"
-                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? 20 : 0 }}
+                className="absolute -top-16 left-0 right-0 text-center pointer-events-none z-50"
+                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? -10 : 0 }}
                 transition={{ duration: 0.4 }}
               >
-                 <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-2 border border-white/10 text-neutral-400 text-xs sm:text-sm font-semibold tracking-widest uppercase">
-                   <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
+                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white/90 text-[10px] font-bold tracking-[0.2em] uppercase shadow-2xl">
+                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_8px_#00ff88]" />
                    Hover to deconstruct
                  </span>
               </motion.div>
