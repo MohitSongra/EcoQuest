@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { motion, useScroll, useTransform } from "framer-motion";
 import LifeCycleScroll from "../components/LifeCycleScroll";
 import EWasteDeconstructor from "../components/EWasteDeconstructor";
+import InteractiveRewardCards from "../components/InteractiveRewardCards";
 
 export default function Home() {
   const { currentUser, userRole } = useAuth();
@@ -206,17 +207,8 @@ export default function Home() {
               </Link>
             </div>
             
-            {/* Abstract visual representation of rewards */}
-            <div className="flex-1 w-full h-[300px] bg-surface-2 rounded-3xl border border-white/5 relative overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
-              <div className="flex -space-x-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className={`w-24 h-24 rounded-full border border-white/20 backdrop-blur-xl flex items-center justify-center bg-surface-1/50 shadow-floating`} style={{ zIndex: 4 - i }}>
-                    <span className="text-white font-medium">{i * 100}pt</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Interactive 3D Reward Cards */}
+            <InteractiveRewardCards />
           </motion.div>
         </div>
       </section>
