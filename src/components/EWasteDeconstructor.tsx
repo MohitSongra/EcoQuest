@@ -62,26 +62,38 @@ export default function EWasteDeconstructor() {
     if (activeDevice === 'smartphone' && videoRef.current) {
       videoRef.current.pause();
       
-      if (reqRef.current) window.clearInterval(reqRef.current);
-      
-      reqRef.current = window.setInterval(() => {
-        if (!videoRef.current) return;
+      reqRef.current = requestAnimationFrame((time) => {
+        let lastTime = time;
         
-        if (videoRef.current.currentTime <= 0.05) {
-          videoRef.current.currentTime = 0;
-          if (reqRef.current) window.clearInterval(reqRef.current);
-          return;
-        }
+        const stepReverse = (currentTimeMs: number) => {
+          if (!videoRef.current) return;
+          
+          const delta = currentTimeMs - lastTime;
+          lastTime = currentTimeMs;
+          
+          // Cap delta at 50ms to prevent massive jumps if tab is suspended
+          const safeDelta = Math.min(delta, 50);
+          const timeToSubtract = (safeDelta / 1000) * 1.5;
+          const newTime = videoRef.current.currentTime - timeToSubtract;
+          
+          if (newTime <= 0.05) {
+            videoRef.current.currentTime = 0;
+            return;
+          }
+          
+          videoRef.current.currentTime = newTime;
+          reqRef.current = requestAnimationFrame(stepReverse);
+        };
         
-        videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 0.05);
-      }, 30);
+        reqRef.current = requestAnimationFrame(stepReverse);
+      });
     }
   };
 
-  // Cleanup interval
+  // Cleanup animation frame
   useEffect(() => {
     return () => {
-      if (reqRef.current) window.clearInterval(reqRef.current);
+      if (reqRef.current) cancelAnimationFrame(reqRef.current);
     };
   }, []);
 
@@ -152,17 +164,6 @@ export default function EWasteDeconstructor() {
                   onMouseEnter={() => setHoveredPart(2)} 
                 />
               </div>
-
-              <motion.div 
-                className="absolute top-8 left-0 right-0 text-center pointer-events-none z-50"
-                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? -10 : 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white/90 text-[10px] font-bold tracking-[0.2em] uppercase shadow-2xl">
-                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_8px_#00ff88]" />
-                   Hover to deconstruct
-                 </span>
-              </motion.div>
             </div>
           ) : (
             // LAPTOP: Isometric CSS 3D Mode
@@ -234,18 +235,20 @@ export default function EWasteDeconstructor() {
                 );
               })}
               
-              <motion.div 
-                className="absolute -top-16 left-0 right-0 text-center pointer-events-none z-50"
-                animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? -10 : 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white/90 text-[10px] font-bold tracking-[0.2em] uppercase shadow-2xl">
-                   <span className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_8px_#00ff88]" />
-                   Hover to deconstruct
-                 </span>
-              </motion.div>
             </motion.div>
           )}
+
+          {/* Common Instruction Badge - Placed completely outside masks to ensure perfect visibility */}
+          <motion.div 
+            className="absolute top-8 left-0 right-0 text-center pointer-events-none z-50"
+            animate={{ opacity: isExploded ? 0 : 1, y: isExploded ? -10 : 0 }}
+            transition={{ duration: 0.4 }}
+          >
+             <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-surface-2/90 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-[0.2em] uppercase shadow-2xl">
+               <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_10px_#00ff88]" />
+               Hover to deconstruct
+             </span>
+          </motion.div>
         </div>
 
         {/* Information Panel Column */}
