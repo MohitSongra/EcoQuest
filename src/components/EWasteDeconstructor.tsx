@@ -124,20 +124,20 @@ export default function EWasteDeconstructor() {
       </div>
 
       {/* Main Interactive Canvas */}
-      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-0 items-center bg-surface-1/30 rounded-[2.5rem] border border-white/5 overflow-hidden min-h-[600px] relative">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-0 items-center min-h-[600px] relative">
         
         {/* Ambient background glow */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(0,255,136,0.03)_0%,transparent_50%)] pointer-events-none" />
 
         {/* Visualization Column */}
         <div 
-          className="lg:col-span-7 relative h-[450px] lg:h-[600px] w-full flex items-center justify-center perspective-[2000px] group overflow-hidden"
+          className="lg:col-span-7 relative h-[450px] lg:h-[600px] w-full flex items-center justify-center perspective-[2000px] group"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           {activeDevice === 'smartphone' ? (
             // SMARTPHONE: Video Mode
-            <div className="relative w-full h-full flex items-center justify-center overflow-hidden"
+            <div className="relative w-full h-full flex items-center justify-center"
                  style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)' }}>
               <video 
                 ref={videoRef}
@@ -263,7 +263,7 @@ export default function EWasteDeconstructor() {
         </div>
 
         {/* Information Panel Column */}
-        <div className="lg:col-span-5 p-8 sm:p-12 lg:p-16 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-white/5 bg-gradient-to-r from-transparent to-surface-2/30 h-full">
+        <div className="lg:col-span-5 p-8 sm:p-12 lg:p-16 flex flex-col justify-center h-full relative z-10">
           
           <div className="mb-4">
             <h3 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-white mb-6 font-[family-name:var(--font-clash-display)]">
