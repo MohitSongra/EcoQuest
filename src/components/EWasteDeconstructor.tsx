@@ -62,18 +62,33 @@ export default function EWasteDeconstructor() {
     if (activeDevice === 'smartphone' && videoRef.current) {
       videoRef.current.pause();
       
-      const stepReverse = () => {
+      let lastTime = performance.now();
+      
+      const stepReverse = (time: number) => {
         if (!videoRef.current) return;
-        if (videoRef.current.currentTime <= 0.05) {
+        
+        // Use delta time for smooth, consistent backwards scrubbing
+        const delta = time - lastTime;
+        lastTime = time;
+        
+        // Scrub backwards at 1.5x speed
+        const timeToSubtract = (delta / 1000) * 1.5;
+        const newTime = videoRef.current.currentTime - timeToSubtract;
+        
+        if (newTime <= 0.05) {
           videoRef.current.currentTime = 0;
           return;
         }
-        videoRef.current.currentTime -= 0.05; // Adjust scrub speed backwards
+        
+        videoRef.current.currentTime = newTime;
         reqRef.current = requestAnimationFrame(stepReverse);
       };
       
       if (reqRef.current) cancelAnimationFrame(reqRef.current);
-      reqRef.current = requestAnimationFrame(stepReverse);
+      reqRef.current = requestAnimationFrame((time) => {
+        lastTime = time;
+        stepReverse(time);
+      });
     }
   };
 
@@ -122,11 +137,12 @@ export default function EWasteDeconstructor() {
         >
           {activeDevice === 'smartphone' ? (
             // SMARTPHONE: Video Mode
-            <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+            <div className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                 style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)' }}>
               <video 
                 ref={videoRef}
                 src="/videos/smartphone_exploded.mp4"
-                className="absolute inset-0 w-full h-full object-cover sm:object-contain pointer-events-none mix-blend-screen drop-shadow-2xl opacity-90"
+                className="absolute inset-0 w-full h-full object-cover scale-[1.2] pointer-events-none mix-blend-screen drop-shadow-2xl opacity-100"
                 muted
                 playsInline
                 preload="auto"
