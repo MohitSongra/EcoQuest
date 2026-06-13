@@ -44,7 +44,7 @@ export default function EWasteDeconstructor() {
   const handleMouseEnter = () => {
     setIsExploded(true);
     if (activeDevice === 'smartphone' && videoRef.current) {
-      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+      if (reqRef.current) window.clearInterval(reqRef.current);
       videoRef.current.playbackRate = 1;
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
@@ -62,40 +62,26 @@ export default function EWasteDeconstructor() {
     if (activeDevice === 'smartphone' && videoRef.current) {
       videoRef.current.pause();
       
-      let lastTime = performance.now();
+      if (reqRef.current) window.clearInterval(reqRef.current);
       
-      const stepReverse = (time: number) => {
+      reqRef.current = window.setInterval(() => {
         if (!videoRef.current) return;
         
-        // Use delta time for smooth, consistent backwards scrubbing
-        const delta = time - lastTime;
-        lastTime = time;
-        
-        // Scrub backwards at 1.5x speed
-        const timeToSubtract = (delta / 1000) * 1.5;
-        const newTime = videoRef.current.currentTime - timeToSubtract;
-        
-        if (newTime <= 0.05) {
+        if (videoRef.current.currentTime <= 0.05) {
           videoRef.current.currentTime = 0;
+          if (reqRef.current) window.clearInterval(reqRef.current);
           return;
         }
         
-        videoRef.current.currentTime = newTime;
-        reqRef.current = requestAnimationFrame(stepReverse);
-      };
-      
-      if (reqRef.current) cancelAnimationFrame(reqRef.current);
-      reqRef.current = requestAnimationFrame((time) => {
-        lastTime = time;
-        stepReverse(time);
-      });
+        videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 0.05);
+      }, 30);
     }
   };
 
-  // Cleanup requestAnimationFrame
+  // Cleanup interval
   useEffect(() => {
     return () => {
-      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+      if (reqRef.current) window.clearInterval(reqRef.current);
     };
   }, []);
 
@@ -137,12 +123,12 @@ export default function EWasteDeconstructor() {
         >
           {activeDevice === 'smartphone' ? (
             // SMARTPHONE: Video Mode
-            <div className="relative w-full h-full flex items-center justify-center"
+            <div className="relative w-full h-full flex items-center justify-center scale-[1.3] md:scale-[1.4]"
                  style={{ WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)', maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 70%)' }}>
               <video 
                 ref={videoRef}
                 src="/videos/smartphone_exploded.mp4"
-                className="absolute inset-0 w-full h-full object-cover scale-[1.2] pointer-events-none mix-blend-screen drop-shadow-2xl opacity-100"
+                className="absolute inset-0 w-full h-full object-contain pointer-events-none mix-blend-screen drop-shadow-2xl opacity-100"
                 muted
                 playsInline
                 preload="auto"
